@@ -1,0 +1,9 @@
+{
+    "name": "burovoordeboeg/realworks_import",
+    "description": "",
+    "autoload": {
+        "psr-4": {
+            "BvdB\\Realworks\\": "classes/Realworks"
+        }
+    }
+}
