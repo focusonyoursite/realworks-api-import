@@ -3,7 +3,7 @@
     namespace BvdB\Realworks;
 
     
-    class Business extends API
+    class Business implements ImportInterface
     {   
 
         public $endpoint = '/bog/v1/objecten';
@@ -13,16 +13,12 @@
             '936576' => '7c57408f-1123-49a0-ba67-01757e7fa2b9' // Oostvoorne
         );
 
-        /**
-         * Start the import for BOG-objects
-         *
-         * @param string $from timestamp for the API request
-         * @return void
-         */
-        public function import( string $from ) {
-
+        public function getFeed() {
+            return '';
         }
 
-        // Processing below
+        public function import( string $json_file ) {
+
+        }
 
     }

@@ -3,7 +3,7 @@
     namespace BvdB\Realworks;
 
     
-    class Nieuwbouw extends API
+    class Nieuwbouw implements ImportInterface
     {   
 
         public $endpoint = '/nieuwbouw/v1/objecten';
@@ -13,16 +13,12 @@
             '936576' => '169a2413-bb41-46b6-b9d7-1477f39c2eaf' // Oostvoorne
         );
 
-        /**
-         * Start the import for Nieuwbouw-objects
-         *
-         * @param string $from timestamp for the API request
-         * @return void
-         */
-        public function import( string $from ) {
-
+        public function getFeed() {
+            return '';
         }
 
-        // Processing below
+        public function import( string $json_file ) {
+
+        }
 
     }

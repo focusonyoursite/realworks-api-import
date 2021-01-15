@@ -12,23 +12,36 @@ Text Domain: bvdb-realworks
 Domain Path: /languages
 */
 
-use \BvdB\Realworks as Realworks;
-
 error_reporting(E_ALL);
 ini_set('display_errors', 'on');
 
-include_once 'vendor/autoload.php';
 
-try {
-    echo "<pre>";
-    print_r( new Realworks\Import() );
-    echo "</pre>";
+// try
+// {
+//     $import = new \BvdB\Realworks\Import;
+
+//     echo "<pre>";
+//     print_r( $import->start() );
+//     echo "</pre>";
+
+// }
+// catch( \Exception $e )
+// {
+//     echo "<pre>";
+//     print_r($e);
+//     echo "</pre>";
+// }
+
+// exit();
+
+/**
+ * Register WP-CLI commando
+ */ 
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+    add_action( 'cli_init', function() {
+        include_once 'vendor/autoload.php';
+
+        \WP_CLI::add_command( 'bvdb-import', '\BvdB\Realworks\Import' );
+
+    } );
 }
-
-catch( Exception $e ) {
-    echo "<pre>";
-    print_r( $e );
-    echo "</pre>";
-}
-
-exit();

@@ -73,7 +73,7 @@
          * @param array $query
          * @return string $request_uri to use in API request
          */
-        public function build_request_uri( array $query = null ) 
+        public function buildRequestUri( array $query = null ) 
         {   
             // Setup blank request URI
             $request_uri = '';
@@ -121,7 +121,7 @@
          * @param string $token
          * @return array $result
          */
-        public function parse_request_data( string $key, string $url, string $token ) 
+        public function parseRequestData( string $key, string $url, string $token ) 
         {
 
             // Store results
@@ -137,7 +137,7 @@
             if( isset( $request['paginering']['volgende'] ) ) 
             {
                 // Recursively call the result function
-                $result = array_merge( $result, ( $this->parse_request_data( $key, $request['paginering']['volgende'], $token ) ) );
+                $result = array_merge( $result, ( $this->parseRequestData( $key, $request['paginering']['volgende'], $token ) ) );
             }
 
             return $result;
