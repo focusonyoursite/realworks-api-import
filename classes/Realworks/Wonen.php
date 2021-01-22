@@ -19,7 +19,7 @@
             // Setup tokens to use for API connection
             $tokens = array(
                 '11631' => '7590910d-071f-45d6-9474-179301608e7e', // Rotterdam
-                // '936576' => '1ad82de8-9c24-409d-8582-8a66b2fb227e' // Oostvoorne
+                '936576' => '1ad82de8-9c24-409d-8582-8a66b2fb227e' // Oostvoorne
             );
             
             // Set the query parameters

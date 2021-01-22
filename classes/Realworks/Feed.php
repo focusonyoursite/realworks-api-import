@@ -8,6 +8,11 @@
 
         // Setup the general save locaion
         public $import_save_location = __DIR__ . '/../../json/';
+        public $import_filename;
+
+        public function __construct() {
+            $this->import_filename = date( 'Ymd', time() ) . '.json';
+        }
 
         /**
          * Gets the feed data and saving it to a JSON file
@@ -21,8 +26,7 @@
         public function getFeedLocation( string $name, string $endpoint, array $query = null, array $tokens ) 
         {   
             // Check if file already exists
-            $filename = date( 'Ymd_Hi', time() ) . '.json';
-            $file = $this->import_save_location . $name . '/' . $filename;
+            $file = $this->import_save_location . $name . '/' . $this->import_filename;
             if( file_exists( $file ) )
                 return $file;
 
@@ -86,8 +90,7 @@
         public function saveToJsonFile( string $type, array $data ) 
         {
             $contents = json_encode( $data );
-            $filename = date( 'Ymd_Hi', time() ) . '.json';
-            $file = $this->import_save_location . $type . '/' . $filename;
+            $file = $this->import_save_location . $type . '/' . $this->import_filename;
 
             if( !file_exists( $file ) ) 
             {
@@ -99,14 +102,14 @@
                 }
                 else 
                 {
-                    throw new \Exception( "Import file could not be saved due to error, with filename: $filename" );
+                    throw new \Exception( "Import file could not be saved due to error, with filename: $this->import_filename" );
                 }
             } 
 
             // File exists, return current file
             else 
             {
-                throw new \Exception( "File already exists with filename: $filename" );
+                throw new \Exception( "File already exists with filename: $this->import_filename" );
             }
         } 
         
