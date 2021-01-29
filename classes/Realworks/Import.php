@@ -8,10 +8,12 @@
 
         protected $data = array();
         private $helpers;
+        private $media;
 
         public function __construct()
         {
             $this->helpers = new ImportHelper();
+            $this->media = new Media();
         }
 
         /**
@@ -132,21 +134,23 @@
                     foreach( $data as $object ) {
                         
                         $imported_posts[] = $this->importObject( $feed, $object );
-
-                        $i++;
-                        if( $i == 10 ) {
-                            break; 
+                        
+                        if( $i == 5 ) {
+                            break;
                         }
+                        $i++;
                     }
 
-                    // echo "<pre>";
-                    // print_r($imported_posts);
-                    // echo "</pre>";
                     \WP_CLI::line('Ending import of feed ' . $feed );
 
                 }
             }
 
+            // Start Import of media
+            $this->importMedia( $imported_posts );
+
+            // Setup Facebook post
+            
             
             // End import operation and reset all the hooks etc
             $this->endBulkOperation();
@@ -170,7 +174,7 @@
         private function importObject( string $type, array $data )
         {
             // Check if there is a post with the same Realworks ID already in database
-            $post_id = $this->findPostByReference( $data['id'] );
+            $post_id = $this->helpers->findPostByReference( $data['id'] );
             
             \WP_CLI::line( (( $post_id != null ) ? 'Start update of object with Post_ID: ' . $post_id : 'Insert new object for Realworks ID ' . $data['id']) );
 
@@ -187,71 +191,122 @@
                 'post_modified' => $this->helpers->formatDate( $type, $data, 'modified', 'Y-m-d H:i:s' ),
                 
                 'meta_input' => array(
-                    'realworks_id' => $data['id']
-
-                    // TO DO: Import rest of the data as serialized arrays
-                    // TO DO: Add media object as total media object on initial import,
-                    //        we will handle media parsing after the initial import is
-
-                ),
-                'tax_input' => array(
-                    // TO DO: Setup the taxonomies 
+                    'realworks_id' => $data['id'],
+                    'realworks_vestiging' => $data['diversen']['diversen']['afdelingscode'],
+                    'financieel' => $data['financieel']['overdracht'],
+                    'algemeen' => $data['algemeen'],
+                    'buitenruimte' => $data['detail']['buitenruimte'],
+                    'media_raw' => $data['media'],
+                    'facebook_update_status' => $this->helpers->needsStatusUpdate( $type, $post_id, $data )
                 )
             );
 
             // Create the post
-            $return_id = \wp_insert_post ($post);
-
-            if( $return_id == null ) {
+            $post_id = \wp_insert_post ($post);
+            
+            if( $post_id == null ) {
                 \WP_CLI::warning( 'Failed importing object with ID ' . $data['id'] );
             } else {
-                \WP_CLI::success( 'Succesfully imported object with ID ' . $data['id'] . ' and ' . $return_id );
+                // Output success message
+                $this->importTerms( $post_id, $type, $data );
+                \WP_CLI::success( 'Succesfully imported object with ID ' . $data['id'] . ' and ' . $post_id );
             }
 
-            return $return_id;
+            return $post_id;
         }
 
         /**
-         * Get the post ID by reference (Realworks ID)
+         * Set the object terms
+         * @see: https://developer.wordpress.org/reference/functions/wp_set_post_terms/
          *
-         * @param string $reference = object ID
-         * @return int post_id
-         */
-        private function findPostByReference ( string $reference )
-        {
-            $query = new \WP_Query(
-                array(
-                    'no_found_rows' => true, // speeds up query
-                    'update_post_meta_cache' => false, // speeds up query
-                    'update_post_term_cache' => false, // speeds up query
-                    'fields' => 'ids', // speeds up query
-                    'post_type' => 'object',
-                    'post_status' => 'any',
-                    'meta_key'    => 'realworks_id',
-                    'meta_value'  => $reference,
-                )
-            );
-            
-            if ( empty( $query->posts ) ) {
-                return null;
-            }
-    
-            // Return first item if it is already present in the WordPress database
-            $post_id = reset( $query->posts ); // Because we are only retreiving the id fields ;)
-            return $post_id; 
-        }
-
-
-
-        /**
-         * Remove all post and metadata for the imports
-         *
+         * @param integer $post_id
+         * @param string $type
+         * @param array $data
          * @return void
          */
-        public function nukeImport() 
+        private function importTerms( int $post_id, string $type, array $data )
         {
-            
+            // Assign terms to post
+            $tax_input = array(
+                'object_type' => $this->helpers->formatTermData( $type, $data, 'type' ),
+                'object_plaats' => $this->helpers->formatTermData( $type, $data, 'plaats' ),
+                'object_koophuur' => $this->helpers->formatTermData( $type, $data, 'koophuur' ),
+                'object_status' => $this->helpers->formatTermData( $type, $data, 'status' ),
+                'object_soort' => $type,
+            );
+
+            foreach( $tax_input as $taxonomy => $value )
+            {   
+                $terms = $this->helpers->formatObjectTerm ( $taxonomy, $value );
+                
+                if( !empty( $terms ) )
+                {
+                    wp_set_object_terms( $post_id, $terms, $taxonomy );
+                }
+                
+            }
         }
+
+        /**
+         * Start importing media items to separate folders
+         *
+         * @param array $post_ids
+         * @return void
+         */
+        public function importMedia( array $post_ids = null )
+        {
+
+            if( !empty( $post_ids ) )
+            {
+
+                // Get the upload dir folder to search in
+                $upload_dir = $this->media->getUploadsFolder();
+                
+                // Loop posts media import
+                foreach( $post_ids as $post_id )
+                {
+                    // Start logging output
+                    \WP_CLI::line('Start importing media items from post: ' . $post_id);
+
+                    // Storage for post meta: media
+                    $post_media = array();
+
+                    // Setup the target folder, first check if folder exists, if not. Create it. 
+                    $media_folder = $this->media->createFolder( $post_id );
+
+                    // Get the media list
+                    $media_list = get_post_meta( $post_id, 'media_raw', true );
+
+                    if( !empty($media_list) )
+                    {
+                        // Setup media in different categories to loop through
+                        $media = $this->media->formatMediaList( $media_list );
+
+                        // Start downloading and processing images according to type
+                        foreach( $media as $media_type => $media_objects )
+                        {
+                            // Check if there are media objects
+                            if( !empty( $media_objects ) ) 
+                            {
+                                \WP_CLI::line('Start import ' . $media_type);
+
+                                // Import the media objects
+                                $post_media[$media_type] = $this->media->importMediaObjects( $post_id, $media_type, $media_objects );
+                            }
+                        }
+                    }
+
+                    update_post_meta($post_id, 'media', $post_media);
+                }
+
+            }
+            else
+            {
+                \WP_CLI::warning( 'No media to import' );
+            }
+        }
+
+
         
         // private function finalize_import() {
             

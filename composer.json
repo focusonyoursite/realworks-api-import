@@ -5,5 +5,8 @@
         "psr-4": {
             "BvdB\\Realworks\\": "classes/Realworks"
         }
+    },
+    "require": {
+        "vimeo/vimeo-api": "^3.0"
     }
 }
