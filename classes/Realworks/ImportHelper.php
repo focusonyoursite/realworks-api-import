@@ -16,38 +16,47 @@
          */
         public function needsStatusUpdate ( string $type, $post_id, array $data )
         {
-            // Get current status
-            $current_status = wp_get_post_terms( $post_id, 'object_status' );
-            $input_status = $this->formatTermData( $type, $data, 'status' );
-            $update = false;
-
-            // Check if post needs update
-            if ( $input_status !== 'INGETROKKEN' &&
-                 $input_status !== 'GEANNULEERD' &&
-                 $input_status !== 'PROSPECT' &&
-                 $input_status !== 'IN_AANMELDING' &&
-                 $input_status !== 'VERKOCHT_BIJ_INSCHRIJVING' &&
-                 ( !isset($current_status[0]) || $current_status[0]->name !== $input_status ) )
+            if( $type === 'wonen' )
             {
-                $update = true;
+                // Get current status
+                $current_status = wp_get_post_terms( $post_id, 'object_status' );
+                $input_status = $this->formatTermData( $type, $data, 'status' );
+                $update = false;
+
+                // Check if post needs update
+                if ( $input_status !== 'INGETROKKEN' &&
+                    $input_status !== 'GEANNULEERD' &&
+                    $input_status !== 'PROSPECT' &&
+                    $input_status !== 'IN_AANMELDING' &&
+                    $input_status !== 'VERKOCHT_BIJ_INSCHRIJVING' &&
+                    ( !isset($current_status[0]) || $current_status[0]->name !== $input_status ) )
+                {
+                    $update = true;
+                }
+                
+                return array(
+                    'update' => $update,
+                    'old_status' => (( !isset( $current_status[0] ) ) ? null : $current_status[0]->name ),
+                    'new_status' => $input_status
+                );
             }
-            
-            return array(
-                'update' => $update,
-                'old_status' => (( !isset( $current_status[0] ) ) ? null : $current_status[0]->name ),
-                'new_status' => $input_status
-            );
+
+            return false;
         }
 
 
         /**
          * Get the post ID by reference (Realworks ID)
          *
-         * @param string $reference = object ID
+         * @param string $type 
+         * @param array $data
          * @return int post_id
          */
-        public function findPostByReference ( string $reference )
+        public function findPostByReference ( string $type, array $data )
         {
+            // Get reference by type
+            $reference = $this->extractRealworksId( $type, $data );
+
             $query = new \WP_Query(
                 array(
                     'no_found_rows' => true, // speeds up query
@@ -68,6 +77,24 @@
             // Return first item if it is already present in the WordPress database
             $post_id = reset( $query->posts ); // Because we are only retreiving the id fields ;)
             return $post_id; 
+        }
+
+        /**
+         * Get the location of the realworks ID
+         *
+         * @param string $type
+         * @param array $data
+         * @return integer $id
+         */
+        function extractRealworksId( string $type, array $data )
+        {
+            if( $type === 'nieuwbouw' )
+            {
+                return $data['project']['id'];
+            }
+            else {
+                return $data['id'];
+            }
         }
 
         /**
@@ -105,6 +132,11 @@
                 }
             }
 
+            if( $type === 'nieuwbouw' )
+            {
+                $title = $data['project']['algemeen']['omschrijving'];
+            }
+
             // Return the title
             return $title;
         }
@@ -121,15 +153,13 @@
             // Holder for content
             $content = '';
 
-            if( $type === 'wonen' )
+            if( $type === 'wonen' || $type === 'nieuwbouw' )
             {
-                // Get correct string from data
-                $input = $data['teksten']['aanbiedingstekst'];
-                $content = htmlentities( html_entity_decode( $input ) );
+                $content = $data['teksten']['aanbiedingstekst'];
             }
 
             // Return the content
-            return $content;
+            return htmlentities( html_entity_decode( $content ) );
         }
 
         /**
@@ -151,18 +181,31 @@
                 switch ($return)
                 {
                     case 'insert':
-                        $value = $data['diversen']['marketing']['publicatiedatum'];
+                        $value = $data['diversen']['diversen']['invoerdatum'];
                         break;
 
                     case 'modified':
                         $value = $data['tijdstipLaatsteWijziging'];
                         break;
                 }
-
-                $date = date( $format, strtotime($value) );
             }
 
-            return $date;
+            if( $type === 'nieuwbouw' ) 
+            {
+                // Set path where the value is located
+                switch ($return)
+                {
+                    case 'insert':
+                        $value = $data['project']['diversen']['diversen']['invoerdatum'];
+                        break;
+
+                    case 'modified':
+                        $value = $data['tijdstipLaatsteWijziging'];
+                        break;
+                }
+            }
+
+            return date( $format, strtotime($value) );
 
         }
 
@@ -235,6 +278,58 @@
                 if( $taxonomy === 'status' )
                 {
                     $term = $data['financieel']['overdracht']['status'];
+                }
+            }
+
+            if( $type === 'nieuwbouw' ) 
+            {
+                // Check if the object is for sale or for rent
+                // Can be both, so base is an array. 
+                if( $taxonomy === 'koophuur' ) 
+                {
+                    $term = array();
+                    $koophuur = $data['project']['algemeen']['koopOfHuur'];
+
+                    if( $koophuur === 'KOOP_EN_HUUR' )
+                    {
+                        $term[] = 'KOOP';
+                        $term[] = 'HUUR';
+                    }
+                    else
+                    {
+                        if( $koophuur === 'KOOP' )
+                        {
+                            $term[] = 'KOOP';
+                        }
+
+                        if( $koophuur === 'HUUR' )
+                        {
+                            $term[] = 'HUUR';
+                        }
+                    }
+                }
+                
+                // Get the main object type and a subtype if available.
+                if( $taxonomy === 'type' )
+                {
+                    $term = array();
+
+                    if( !empty( $data['bouwtypen'] ) )
+                    {
+                        // TO DO: Deze moet herstructureerd worden omdat dit voor nieuwbouw dus een array 
+                        // met diverse waarden is. FormatObjectTem gaat er vanuit dat parent een losse waarde is. 
+                        // En de children zijn daarentegen wel een array. Moet dus complexer worden qua opzet. 
+                    }
+                }
+                
+                if( $taxonomy === 'plaats' )
+                {
+                    $term = strtoupper($data['project']['algemeen']['plaats']);
+                }
+                
+                if( $taxonomy === 'status' )
+                {
+                    $term = $data['project']['algemeen']['status'];
                 }
             }
 
@@ -320,7 +415,42 @@
     
         }
 
+        /**
+         * Set object meta values
+         *
+         * @param string $type
+         * @param array $data
+         * @return array meta values
+         */
+        public function formatObjectMetaValues( string $type, array $data ) 
+        {
+            // Set keys for meta values
+            $meta = array();
 
+            if( $type === 'wonen' ) 
+            {
+                $meta['realworks_id'] = $data['id'];
+                $meta['realworks_vestiging'] = $data['diversen']['diversen']['afdelingscode'];
+                $meta['financieel'] = $data['financieel']['overdracht'];
+                $meta['algemeen'] = $data['algemeen'];
+                $meta['buitenruimte'] = $data['detail']['buitenruimte'];
+                $meta['media_raw'] = $data['media'];
+                $meta['facebook_update_status'] = $this->needsStatusUpdate( $type, $post_id, $data );
+            }
+
+            if( $type === 'nieuwbouw' ) 
+            {
+                $meta['realworks_id'] = $data['project']['id'];
+                $meta['realworks_vestiging'] = $data['project']['diversen']['diversen']['afdelingscode'];
+                $meta['algemeen'] = $data['project']['algemeen'];
+                $meta['diversen'] = $data['project']['diversen']['diversen'];
+                $meta['media_raw'] = $data['media'];
+                $meta['facebook_update_status'] = false;
+            }
+
+            return $meta;
+
+        }
 
 
     } // End class

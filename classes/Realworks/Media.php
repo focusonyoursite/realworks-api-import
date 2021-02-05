@@ -6,17 +6,8 @@
     class Media
     {   
 
+        public $vimeo;
         public static $realworks_dir = 'realworks';
-        public static $media_needs_resize = array(
-            'images',
-            'panorama',
-            'floorplan'
-        );
-
-        private $vimeo;
-        protected static $vimeo_client_id = '5c40d0996d502a323bc2f82a088c29e84bf1a079';
-        protected static $vimeo_client_secret = 'UeW0wKXclrhofmCIuRneOMgOXDvtpA9Q5by1S1U5N++DGC2HwER42YdAw4SY6R1HqKBue2TihUUVmyP7h0VNnWAWWimft1LZsnbeOAdW9z8z/NzVZf4dbXQsVv7voLev';
-        protected static $vimeo_access_token = '0a08f0d11169d0a0a392cd762336bb58';
 
         public $upload_path;
         public $upload_uri;
@@ -28,8 +19,7 @@
             $this->upload_uri = wp_upload_dir()['baseurl'] . '/' . static::$realworks_dir . '/';
             $this->upload_dir = $this->createFolder( static::$realworks_dir , true );
 
-            $this->vimeo = new \Vimeo\Vimeo( static::$vimeo_client_id, static::$vimeo_client_secret );
-            $this->vimeo->setToken( static::$vimeo_access_token );
+            $this->vimeo = new Vimeo();
         }
 
         /**
@@ -139,7 +129,7 @@
                     $media[ $this->getMediaType($item['soort']) ][] = array(
                         'order' => $item['volgnummer'],
                         'filename' => $this->getFilename( $item['link'] ),
-                        'url' => $item['link'],
+                        'url' => $item['link'] . '&resize=4',
                         'mime' => $item['mimetype'],
                         'featured' => ( $item['soort'] == 'HOOFDFOTO' )
                     );
@@ -226,8 +216,7 @@
                     if( !$this->fileExists( $location, $media_object['filename'] ) )
                     {
                         // Setup URL to download
-                        $download_url = $media_object['url'] . (( in_array( $media_type, static::$media_needs_resize ) ) ? '&resize=4' : '' );
-                        $this->downloadFile( $download_url, $location, $media_object['filename'] );
+                        $this->downloadFile( $media_object['url'], $location, $media_object['filename'] );
                     }
 
                     // Add to imported items
@@ -246,19 +235,11 @@
             {   
                 foreach( $media_objects as $media_object )
                 {
-                    // echo 'Start upload of ' . $media_object['url'] . PHP_EOL;
-                    // $video_response = $this->vimeo->request(
-                    //     '/me/videos',
-                    //     [
-                    //         'upload' => [
-                    //             'approach' => 'pull',
-                    //             'link' => $media_object['url']
-                    //         ],
-                    //     ],
-                    //     'POST'
-                    // );
-
-                    // FOLLOWS WHEN VIMEO ADDS UPLOAD ACCESS
+                    $video_url = $this->vimeo->get_video_url( $post_id, $media_object );
+                    if( !empty( $video_url ) ) 
+                    {
+                        $imported_item[] = $video_url;
+                    }
                 }
             }
 

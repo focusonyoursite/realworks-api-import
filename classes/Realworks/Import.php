@@ -57,7 +57,7 @@
              $feeds = array(
                 'wonen' => '',
                 // 'business' => '',
-                // 'nieuwbouw' => ''
+                'nieuwbouw' => ''
             );
 
             foreach( $feeds as $feed => $feedlocation )
@@ -173,10 +173,12 @@
          */
         private function importObject( string $type, array $data )
         {
+
             // Check if there is a post with the same Realworks ID already in database
-            $post_id = $this->helpers->findPostByReference( $data['id'] );
+            $post_id = $this->helpers->findPostByReference( $type, $data );
+            $realworks_id = $this->helpers->extractRealworksId( $type, $data );
             
-            \WP_CLI::line( (( $post_id != null ) ? 'Start update of object with Post_ID: ' . $post_id : 'Insert new object for Realworks ID ' . $data['id']) );
+            \WP_CLI::line( (( $post_id != null ) ? 'Start update of object with Post_ID: ' . $post_id : 'Insert new object for Realworks ID ' . $realworks_id ) );
 
             // Setup post to insert
             $post = array(
@@ -190,26 +192,18 @@
                 'post_date' => $this->helpers->formatDate( $type, $data, 'insert', 'Y-m-d H:i:s' ),
                 'post_modified' => $this->helpers->formatDate( $type, $data, 'modified', 'Y-m-d H:i:s' ),
                 
-                'meta_input' => array(
-                    'realworks_id' => $data['id'],
-                    'realworks_vestiging' => $data['diversen']['diversen']['afdelingscode'],
-                    'financieel' => $data['financieel']['overdracht'],
-                    'algemeen' => $data['algemeen'],
-                    'buitenruimte' => $data['detail']['buitenruimte'],
-                    'media_raw' => $data['media'],
-                    'facebook_update_status' => $this->helpers->needsStatusUpdate( $type, $post_id, $data )
-                )
+                'meta_input' => $this->helpers->formatObjectMetaValues( $type, $data )
             );
 
             // Create the post
             $post_id = \wp_insert_post ($post);
             
             if( $post_id == null ) {
-                \WP_CLI::warning( 'Failed importing object with ID ' . $data['id'] );
+                \WP_CLI::warning( 'Failed importing object with ID ' . $realworks_id );
             } else {
                 // Output success message
                 $this->importTerms( $post_id, $type, $data );
-                \WP_CLI::success( 'Succesfully imported object with ID ' . $data['id'] . ' and ' . $post_id );
+                \WP_CLI::success( 'Succesfully imported object with ID ' . $realworks_id . ' and ' . $post_id );
             }
 
             return $post_id;

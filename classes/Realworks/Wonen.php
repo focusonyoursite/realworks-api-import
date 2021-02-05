@@ -33,9 +33,9 @@
                     'VERKOCHT_ONDER_VOORBEHOUD',
                     'VERHUURD_ONDER_VOORBEHOUD',
                     'VERHUURD',
-                    'GEVEILD',
-                    'INGETROKKEN',
-                    'GEANNULEERD'
+                    // 'GEVEILD',
+                    // 'INGETROKKEN',
+                    // 'GEANNULEERD'
                 )
             );
 
@@ -49,10 +49,6 @@
             {
                 return $e;
             }
-
-        }
-
-        public function import( string $json_file ) {
 
         }
 

@@ -16,7 +16,8 @@
          * @param string $token
          * @return array $response of the request
          */
-        public function request ( string $url, string $token ) {
+        public function request ( string $url, string $token ) 
+        {
 
             // Setup cURL request
             $ch = curl_init();
@@ -59,7 +60,7 @@
 
             else 
             {
-                throw new \Exception( "Realworks API returned statuscode: $statuscode on API Request to URL: $endpoint" );
+                throw new \Exception( "Realworks API returned statuscode: $statuscode on API Request to URL: $endpoint. Remote error message $response" );
             }
 
             // Return the result
