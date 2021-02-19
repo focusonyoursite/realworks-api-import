@@ -21,7 +21,7 @@ include_once 'vendor/autoload.php';
 
 // Register the custom post
 $custompost = new \BvdB\Realworks\CustomPosts();
-
+$settings = new \BvdB\Realworks\Settings();
 
 /**
  * Register WP-CLI commando

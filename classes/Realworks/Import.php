@@ -7,13 +7,21 @@
     {   
 
         protected $data = array();
+
+        // Class wrappers
+        private $feed;
         private $helpers;
         private $media;
+        private $meta;
+        private $settings;
 
         public function __construct()
         {
+            $this->feed = new Feed();
             $this->helpers = new ImportHelper();
             $this->media = new Media();
+            $this->meta = new Meta();
+            $this->settings = new Settings();
         }
 
         /**
@@ -53,52 +61,50 @@
             // Log downloading data
             \WP_CLI::line('Starting downloading JSON-feeds at: ' . date('d-m-Y H:i:s') );
 
-             // Feeds to loop, storage for feeds
-             $feeds = array(
-                'wonen' => '',
-                // 'business' => '',
-                'nieuwbouw' => ''
-            );
 
-            foreach( $feeds as $feed => $feedlocation )
-            {   
+            // Get active feeds
+            $active_feeds = get_field('active_feeds', 'realworks');
+            $feeds = array();
 
-                // Get correct classname
-                switch( $feed ) 
-                {
-                    case 'wonen':  
-                        $class = new Wonen();
-                        break;
-
-                    case 'business':  
-                        $class = new Business();
-                        break;
-
-                    case 'nieuwbouw':  
-                        $class = new Nieuwbouw();
-                        break;
+            // Load the feeds and gather data
+            if( !empty($active_feeds) )
+            {
+                foreach( $active_feeds as $active_feed ) {
+                    $feeds[ $active_feed ] = '';
                 }
 
-                try
-                {
-                    // Get the feed data
-                    $file = $class->getFeed();
+                // Check if there are any active feeds
+                foreach( $feeds as $type => $feedlocation )
+                {   
+                    try
+                    {
+                        // Get the feed data
+                        $file = $this->feed->getFeed( $type );
 
-                    // Check if the file exists, and if so, add data to the 
-                    // global data attribute.
-                    if ( file_exists($file) ) {
-                        $this->data[$feed] = json_decode(file_get_contents($file), 1);
+                        // Check if the file exists, and if so, add data to the 
+                        // global data attribute.
+                        if ( file_exists($file) ) {
+                            $this->data[$type] = json_decode(file_get_contents($file), 1);
+                        }
                     }
-                }
-                catch( \Exception $e ) 
-                {
-                    return $e;
+                    catch( \Exception $e ) 
+                    {
+                        return $e;
+                    }
+
                 }
 
+                // Log downloading data
+                \WP_CLI::success('Downloading JSON-feeds complete at: ' . date('d-m-Y H:i:s') );
             }
 
-            // Log downloading data
-            \WP_CLI::success('Downloading JSON-feeds complete at: ' . date('d-m-Y H:i:s') );
+            // No active feeds available
+            else
+            {
+                // Log downloading data
+                \WP_CLI::error('No feeds active at: ' . date('d-m-Y H:i:s') );
+            }
+
         }
     
         /**
@@ -119,7 +125,9 @@
             // Array with WordPress post_ids as value
             $imported_posts = [];
     
+            // TEMP:
             $i = 0;
+
             // Do the import
             if( !empty($data) ) 
             {
@@ -134,11 +142,7 @@
                     foreach( $data as $object ) {
                         
                         $imported_posts[] = $this->importObject( $feed, $object );
-                        
-                        if( $i == 5 ) {
-                            break;
-                        }
-                        $i++;
+
                     }
 
                     \WP_CLI::line('Ending import of feed ' . $feed );
@@ -192,7 +196,7 @@
                 'post_date' => $this->helpers->formatDate( $type, $data, 'insert', 'Y-m-d H:i:s' ),
                 'post_modified' => $this->helpers->formatDate( $type, $data, 'modified', 'Y-m-d H:i:s' ),
                 
-                'meta_input' => $this->helpers->formatObjectMetaValues( $type, $data )
+                'meta_input' => $this->meta->formatMeta( $type, $data )
             );
 
             // Create the post
@@ -203,6 +207,8 @@
             } else {
                 // Output success message
                 $this->importTerms( $post_id, $type, $data );
+                $this->helpers->checkStatusUpdate( $post_id, $type, $data );
+
                 \WP_CLI::success( 'Succesfully imported object with ID ' . $realworks_id . ' and ' . $post_id );
             }
 

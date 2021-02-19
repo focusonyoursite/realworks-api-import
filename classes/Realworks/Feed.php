@@ -9,9 +9,40 @@
         // Setup the general save locaion
         public $import_save_location = __DIR__ . '/../../json/';
         public $import_filename;
+        public $settings;
 
         public function __construct() {
             $this->import_filename = date( 'Ymd', time() ) . '.json';
+            $this->settings = new Settings();
+        }
+
+        /**
+         * Setup feed for input type
+         *
+         * @return void
+         */
+        public function getFeed( string $type ) 
+        {
+
+            // Get the endpoint
+            $endpoint = $this->getEndpoint( $type );
+            
+            // Get the query parameters
+            $query = $this->getQueryParams( $type );
+
+            // Get the API Keys as tokens
+            $tokens = $this->settings->getAPIKeys( $type );
+            
+            // Perform query
+            try 
+            {
+                return $this->getFeedLocation( $type, $endpoint, $query, $tokens );
+            }
+            catch( \Exception $e ) 
+            {
+                return $e;
+            }
+
         }
 
         /**
@@ -65,7 +96,8 @@
 
             // Setup the request url
             $request_uri = '';
-            if( $query !== null ) {
+            if( $query !== null ) 
+            {
                 $request_uri = $this->buildRequestUri( $query );
             }
 
@@ -112,6 +144,72 @@
                 throw new \Exception( "File already exists with filename: $this->import_filename" );
             }
         } 
+
+        /**
+         * Get API Endpoint
+         *
+         * @param string $type
+         * @return string $endpoint
+         */
+        private function getEndpoint( string $type )
+        {
+            switch( $type )
+            {
+                case 'wonen':
+                    return '/wonen/v1/objecten';
+
+                case 'business':
+                    return '/bog/v1/objecten';
+                
+                case 'nieuwbouw':
+                    return '/nieuwbouw/v1/projecten';
+            }
+        }
+
+        /**
+         * Function to return the parameters for the API request
+         *
+         * @param string $type
+         * @return array with arguments
+         */
+        private function getQueryParams( string $type )
+        {
+            // Setup return value
+            $query = array();
+
+            // Wonen objects OR
+            // Business/BOG objects
+            if( $type === 'wonen' || $type === 'business' ) 
+            {
+                $query = array(
+                    'actief' => 'true',
+                    'aantal' => '100',
+                    'status' => array(
+                        'BESCHIKBAAR',
+                        'ONDER_BOD',
+                        'ONDER_OPTIE',
+                        'VERKOCHT_ONDER_VOORBEHOUD',
+                        'VERHUURD_ONDER_VOORBEHOUD',
+                        'VERHUURD',
+                        // 'GEVEILD',
+                        // 'INGETROKKEN',
+                        // 'GEANNULEERD'
+                    )
+                );
+            }
+
+            // Nieuwbouw objects
+            if( $type === 'nieuwbouw' )
+            {
+                $query = array(
+                    'actief' => 'true',
+                    'aantal' => '10'
+                );
+            }
+
+            // Return the query
+            return $query;
+        }
         
     }
 
