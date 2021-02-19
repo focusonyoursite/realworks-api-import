@@ -70,6 +70,9 @@
             // Get default mapping
             $map = $this->mapping();
 
+            // Setup raw media
+            $map['media_raw'] = $data['media'];
+
             // Meta for: Overdracht
             $map['overdracht']['aanvaarding'] = $data['financieel']['overdracht']['aanvaarding'];
             $map['overdracht']['datum_laatste_wijziging'] = $data['diversen']['diversen']['wijzigingsdatum'];
@@ -131,6 +134,9 @@
 
             // Get default mapping
             $map = $this->mapping();
+
+            // Setup raw media
+            $map['media_raw'] = $data['media'];
 
             // Meta for: Overdracht
             $map['overdracht']['aanvaarding'] = $data['financieel']['overdracht']['koopEnOfHuur']['aanvaarding'];
