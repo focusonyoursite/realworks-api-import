@@ -12,11 +12,6 @@
     Domain Path: /languages
     */
 
-
-    error_reporting(E_ERROR);
-    ini_set('display_errors', 'on');
-
-
     include_once 'vendor/autoload.php';
 
     // Register the custom post

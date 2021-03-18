@@ -58,9 +58,7 @@
                 'menu_position'       => 26,
                 'menu_icon'           => 'dashicons-admin-multisite',
                 'can_export'          => true,
-                'has_archive'         => array(
-                    'slug' => 'aanbod'
-                ),
+                'has_archive'         => 'aanbod',
                 'exclude_from_search' => false,
                 'publicly_queryable'  => true,
                 'rewrite'             => $rewrite,
