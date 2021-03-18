@@ -254,5 +254,16 @@
         
         }
 
+        /**
+         * Format Nieuwbouw Metadata
+         *
+         * @param array $data
+         * @return array formatted meta data
+         */
+        public function formatNieuwbouwMeta( array $data )
+        {
+            return array();
+        }
+
 
     }

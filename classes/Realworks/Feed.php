@@ -12,23 +12,26 @@
         public $settings;
 
         public function __construct() {
-            $this->import_filename = date( 'Ymd', time() ) . '.json';
+            $this->import_filename = date( 'Ymd_Hi', time() ) . '.json';
             $this->settings = new Settings();
         }
 
         /**
          * Setup feed for input type
-         *
+         * 
+         * @param string $type the type of feed to get
+         * @param string $import_type latest or initial
+         * @param string $latest_update latest update
          * @return void
          */
-        public function getFeed( string $type ) 
+        public function getFeed( string $type, string $import_type, string $latest_update ) 
         {
 
             // Get the endpoint
             $endpoint = $this->getEndpoint( $type );
             
             // Get the query parameters
-            $query = $this->getQueryParams( $type );
+            $query = $this->getQueryParams( $type, $import_type, $latest_update );
 
             // Get the API Keys as tokens
             $tokens = $this->settings->getAPIKeys( $type );
@@ -170,9 +173,11 @@
          * Function to return the parameters for the API request
          *
          * @param string $type
+         * @param string $import_type
+         * @param string $latest_update
          * @return array with arguments
          */
-        private function getQueryParams( string $type )
+        private function getQueryParams( string $type, string $import_type = null, string $latest_update = null )
         {
             // Setup return value
             $query = array();
@@ -190,12 +195,19 @@
                         'ONDER_OPTIE',
                         'VERKOCHT_ONDER_VOORBEHOUD',
                         'VERHUURD_ONDER_VOORBEHOUD',
-                        'VERHUURD',
-                        // 'GEVEILD',
-                        // 'INGETROKKEN',
-                        // 'GEANNULEERD'
+                        'VERHUURD'
                     )
                 );
+
+                // When import type is latest, we also get other item statusses
+                if( $import_type === 'latest' ) 
+                {
+                    $query['status'] = array_merge($query['status'], array(
+                        'GEVEILD',
+                        'INGETROKKEN',
+                        'GEANNULEERD'
+                    ));
+                }
             }
 
             // Nieuwbouw objects
@@ -205,6 +217,24 @@
                     'actief' => 'true',
                     'aantal' => '10'
                 );
+
+                // @JUSTIN TO DO: NEEDS IMPLEMENTATION
+                // When import type is latest, we also get other items
+                // if( $import_type === 'latest' ) 
+                // {
+                //     $query['status'] = array_merge($query['status'], array(
+                //         // 'GEVEILD',
+                //         // 'INGETROKKEN',
+                //         // 'GEANNULEERD'
+                //     ));
+                // }
+            }
+
+            // When import type is latest, include the latest update
+            if( $import_type === 'latest' && !empty($latest_update) )
+            {
+                $latest_update_datetime = strftime("%Y-%m-%dT%H:%M:%S", $latest_update);
+                $query['gewijzigdNa'] = $latest_update_datetime;
             }
 
             // Return the query

@@ -194,12 +194,13 @@
         /**
          * Import the media objects
          *
-         * @param string $location
+         * @param integer $post_id
+         * @param integer $realworks_id
          * @param string $media_type
          * @param array $media_objects
          * @return string success or failure
          */
-        public function importMediaObjects( int $post_id, string $media_type, array $media_objects )
+        public function importMediaObjects( int $post_id, int $realworks_id, string $media_type, array $media_objects )
         {   
             // Storage for imported items
             $imported_items = array();
@@ -207,7 +208,7 @@
             if( $media_type !== 'videos' )
             {
                 // Create the file-folder (files go in separate folders by media type)
-                $location = $this->createFolder( $post_id . '/' . $media_type );
+                $location = $this->createFolder( $realworks_id . '/' . $media_type );
 
                 // Loop media objects
                 foreach( $media_objects as $media_object )

@@ -5,8 +5,12 @@
     // This class is used for generating the JSON files and importing them afterwards
     class Import extends Commands
     {   
-
+        // Data store
         protected $data = array();
+
+        // Import type
+        private $import_type = null;
+        private $latest_update = null;
 
         // Class wrappers
         private $feed;
@@ -22,10 +26,14 @@
             $this->media = new Media();
             $this->meta = new Meta();
             $this->settings = new Settings();
+
+            // Get latest update
+            $this->import_type = 'latest';
+            $this->latest_update = get_option('realworks_latest_update');
         }
 
         /**
-         * @synopsis [<external_event_id>] [--use-cached-endpoint]
+         * Starting point for the import
          * 
          * @param array $args 
          * @param array $assoc_args Associative CLI args.
@@ -33,6 +41,21 @@
          */
         public function start( $args, $assoc_args )
         {
+            // Set the import type to make sure options are set
+            if( isset($assoc_args['import-type']) )
+            {
+                $this->import_type = $assoc_args['import-type'];
+            }
+            
+            // Log import type
+            \WP_CLI::line('Import type: ' . $assoc_args['import-type'] );
+
+            // Set the import type to make sure options are set
+            if( !empty($this->latest_update) )
+            {
+                \WP_CLI::line('Latest import was at: ' . date('d-m-Y H:i', $this->latest_update) );
+            }
+
             // Set notice for starting the import
             \WP_CLI::line('Starting import at: ' . date('d-m-Y H:i:s') );
             
@@ -61,7 +84,6 @@
             // Log downloading data
             \WP_CLI::line('Starting downloading JSON-feeds at: ' . date('d-m-Y H:i:s') );
 
-
             // Get active feeds
             $active_feeds = get_field('active_feeds', 'realworks');
             $feeds = array();
@@ -79,7 +101,7 @@
                     try
                     {
                         // Get the feed data
-                        $file = $this->feed->getFeed( $type );
+                        $file = $this->feed->getFeed( $type, $this->import_type, $this->latest_update );
 
                         // Check if the file exists, and if so, add data to the 
                         // global data attribute.
@@ -131,6 +153,7 @@
             // Do the import
             if( !empty($data) ) 
             {
+                
                 // There are three arrays in the data variable, containing the three separate 
                 // object-types. The key is the feedname and the value is the data containing the 
                 // objects for importing. 
@@ -139,12 +162,31 @@
                     // Log which feed is processing
                     \WP_CLI::line('Starting import of feed: ' . $feed );
 
+                    // Get total of posts
+                    $total_posts = count($data);
+                    $total_count = 1;
+
+                    // Add progress bar
+                    $progress_bar = \WP_CLI\Utils\make_progress_bar( 'Progress Bar', $total_posts );
+
+                    // Loop objects
                     foreach( $data as $object ) {
                         
+                        // Import post
                         $imported_posts[] = $this->importObject( $feed, $object );
+
+                        // Update progress bar
+                        $progress_bar->tick();
+
+                        // $total_count++;
+                        // if( $total_count == 6 ) {break 2;}
 
                     }
 
+                    // Finish progress bar
+                    $progress_bar->finish();
+
+                    // End import of current feed process
                     \WP_CLI::line('Ending import of feed ' . $feed );
 
                 }
@@ -155,6 +197,10 @@
 
             // Setup Facebook post
             
+
+            // Add the latest import to options table
+            add_option('realworks_latest_update', time());
+            update_option('realworks_latest_update', time());
             
             // End import operation and reset all the hooks etc
             $this->endBulkOperation();
@@ -201,7 +247,11 @@
 
             // Create the post
             $post_id = \wp_insert_post ($post);
+
+            // Add Realworks ID
+            update_post_meta( $post_id, 'realworks_id', $realworks_id );
             
+            // Check if failed
             if( $post_id == null ) {
                 \WP_CLI::warning( 'Failed importing object with ID ' . $realworks_id );
             } else {
@@ -261,18 +311,28 @@
 
                 // Get the upload dir folder to search in
                 $upload_dir = $this->media->getUploadsFolder();
+
+                // Total amount of posts and counter
+                $total_posts = count($post_ids);
+                $total_counter = 1;
+
+                // Add progress bar
+                $progress_bar = \WP_CLI\Utils\make_progress_bar( 'Progress Bar', $total_posts );
                 
                 // Loop posts media import
                 foreach( $post_ids as $post_id )
                 {
                     // Start logging output
-                    \WP_CLI::line('Start importing media items from post: ' . $post_id);
+                    \WP_CLI::line('Start importing media items from post: ' . $post_id . " [$total_counter/$total_posts]");
+
+                    // Get realworks ID
+                    $realworks_id = get_post_meta( $post_id, 'realworks_id', true );
 
                     // Storage for post meta: media
                     $post_media = array();
 
                     // Setup the target folder, first check if folder exists, if not. Create it. 
-                    $media_folder = $this->media->createFolder( $post_id );
+                    $media_folder = $this->media->createFolder( $realworks_id );
 
                     // Get the media list
                     $media_list = get_post_meta( $post_id, 'media_raw', true );
@@ -291,13 +351,23 @@
                                 \WP_CLI::line('Start import ' . $media_type);
 
                                 // Import the media objects
-                                $post_media[$media_type] = $this->media->importMediaObjects( $post_id, $media_type, $media_objects );
+                                $post_media[$media_type] = $this->media->importMediaObjects( $post_id, $realworks_id, $media_type, $media_objects );
                             }
                         }
                     }
 
+                    // Add media to post meta
                     update_post_meta($post_id, 'media', $post_media);
+
+                    // Move progress bar
+                    $progress_bar->tick();
+
+                    // Update the count
+                    $total_counter++;
                 }
+
+                // Finish progress bar
+                $progress_bar->finish();
 
             }
             else
