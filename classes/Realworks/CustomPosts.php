@@ -36,7 +36,7 @@
 
             // Rewrite URL slug
             $rewrite = array(
-                'slug'                => _x( 'object', 'URL slug', 'burovoordeboeg' ),
+                'slug'                => _x( 'aanbod', 'URL slug', 'burovoordeboeg' ),
                 'with_front'          => true,
                 'pages'               => true,
                 'feeds'               => true,
@@ -58,7 +58,9 @@
                 'menu_position'       => 26,
                 'menu_icon'           => 'dashicons-admin-multisite',
                 'can_export'          => true,
-                'has_archive'         => true,
+                'has_archive'         => array(
+                    'slug' => 'aanbod'
+                ),
                 'exclude_from_search' => false,
                 'publicly_queryable'  => true,
                 'rewrite'             => $rewrite,
