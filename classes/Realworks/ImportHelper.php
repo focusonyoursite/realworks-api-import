@@ -205,56 +205,6 @@
         }
 
         /**
-         * Format the price to standardized array
-         *
-         * @param string $type
-         * @param array $data
-         * @return array pricedata
-         */
-        public function formatPrice( string $type, array $data )
-        {
-            // Default price format
-            $price = array(
-                'huur' => array(
-                    'prijs' => 0,
-                    'voorvoegsel' => null,
-                    'conditie' => null,
-                    'prijstype' => false
-                ),
-                'koop' => array(
-                    'prijs' => 0,
-                    'voorvoegsel' => null,
-                    'conditie' => null
-                )
-            );
-
-            if( $type === 'wonen' || $type === 'business' ) 
-            {
-                if( $data['huurprijs'] != 0 )
-                {
-                    $price['huur']['prijs'] = $data['huurprijs'];
-                    $price['huur']['voorvoegsel'] = $data['huurprijsvoorvoegsel'];
-                    $price['huur']['conditie'] = $data['huurconditie'];
-                    $price['huur']['prijstype'] = $data['huurprijstype'];
-                }
-
-                if( $data['koopprijs'] != 0 ) 
-                {
-                    $price['koop']['prijs'] = $data['koopprijs'];
-                    $price['koop']['voorvoegsel'] = $data['koopprijsvoorvoegsel'];
-                    $price['koop']['conditie'] = $data['koopconditie'];
-                }
-            }
-
-            if( $type === 'nieuwbouw' )
-            {
-                // TO DO: NA TOEGANG 
-            }
-
-            return $price;
-        }
-
-        /**
          * Formats the term as specified
          *
          * @param string $type
@@ -293,27 +243,27 @@
                 {
                     $term = array();
 
-                    $term['parent'] = $data['object']['type']['objecttype'];
+                    $term[0]['parent'] = $data['object']['type']['objecttype'];
 
-                    if( $term['parent'] === 'APPARTEMENT' ) 
+                    if( $term[0]['parent'] === 'APPARTEMENT' ) 
                     {
                         if( !empty($data['algemeen']['appartementsoort']) ) 
                         {
-                            $term['children'][] = $data['algemeen']['appartementsoort'];
+                            $term[0]['children'][] = $data['algemeen']['appartementsoort'];
                         }
                     }
 
                     // Get correct parent term
-                    if ( $term['parent'] === 'WOONHUIS' )
+                    if ( $term[0]['parent'] === 'WOONHUIS' )
                     {
                         if( !empty($data['algemeen']['woonhuissoort']) ) 
                         {
-                            $term['children'][] = $data['algemeen']['woonhuissoort'];
+                            $term[0]['children'][] = $data['algemeen']['woonhuissoort'];
                         }
 
                         if( !empty($data['algemeen']['woonhuistype']) ) 
                         {
-                            $term['children'][] = $data['algemeen']['woonhuistype'];
+                            $term[0]['children'][] = $data['algemeen']['woonhuistype'];
                         }
                     }
                 }
@@ -408,9 +358,35 @@
 
                     if( !empty( $data['bouwtypen'] ) )
                     {
-                        // TO DO: Deze moet herstructureerd worden omdat dit voor nieuwbouw dus een array 
-                        // met diverse waarden is. FormatObjectTem gaat er vanuit dat parent een losse waarde is. 
-                        // En de children zijn daarentegen wel een array. Moet dus complexer worden qua opzet. 
+                        // Setup empty term
+                        $term = array();
+
+                        foreach( $data['bouwtypen'] as $key => $bouwtype )
+                        {
+                            $term[$key]['parent'] = $bouwtype['algemeen']['objecttype'];
+
+                            if( $bouwtype['algemeen']['objecttype'] === 'APPARTEMENT' ) 
+                            {
+                                if( !empty($bouwtype['algemeen']['appartementsoort']) ) 
+                                {
+                                    $term[$key]['children'][] = $bouwtype['algemeen']['appartementsoort'];
+                                }
+                            }
+
+                            // Get correct parent term
+                            if ( $bouwtype['algemeen']['objecttype'] === 'WOONHUIS' )
+                            {
+                                if( !empty($bouwtype['algemeen']['woonhuissoort']) ) 
+                                {
+                                    $term[$key]['children'][] = $bouwtype['algemeen']['woonhuissoort'];
+                                }
+
+                                if( !empty($bouwtype['algemeen']['woonhuistype']) ) 
+                                {
+                                    $term[$key]['children'][] = $bouwtype['algemeen']['woonhuistype'];
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -444,34 +420,36 @@
                 // Storage variable for terms to set
                 $object_terms = array();
                 
-                // Check if the parent term exists
-                $parent_term_id = term_exists( $value['parent'], $taxonomy );
-    
-                // If parent term does not exists, insert into taxonomy
-                if( $parent_term_id === null )
+                foreach( $value as $value_term )
                 {
-                    $parent_term_id = wp_insert_term( $value['parent'], $taxonomy );
-                }
-    
-                // Add parent term to storage
-                $object_terms[] = (int) $parent_term_id['term_id'];
-    
-                // Now loop through any children. 
-                if( !empty( $value['children'] ) )
-                {
-                    foreach ( $value['children'] as &$child_term ) 
+                    // Check if the parent term exists
+                    $parent_term_id = term_exists( $value_term['parent'], $taxonomy );
+        
+                    // If parent term does not exists, insert into taxonomy
+                    if( $parent_term_id === null )
                     {
-                        $child_term_id = term_exists( $child_term, $taxonomy, $parent_term_id );
-    
-                        // If not exists, create the term and use ID to link to post. 
-                        if( $child_term_id === null )
+                        $parent_term_id = wp_insert_term( $value_term['parent'], $taxonomy );
+                    }
+                    // Add parent term to storage
+                    $object_terms[] = (int) $parent_term_id['term_id'];
+        
+                    // Now loop through any children. 
+                    if( !empty( $value_term['children'] ) )
+                    {
+                        foreach ( $value_term['children'] as &$child_term ) 
                         {
-                            $child_term_id = wp_insert_term( $child_term, $taxonomy, array(
-                                'parent' => $parent_term_id['term_id']
-                            ) );
+                            $child_term_id = term_exists( $child_term, $taxonomy, $parent_term_id );
+        
+                            // If not exists, create the term and use ID to link to post. 
+                            if( $child_term_id === null )
+                            {
+                                $child_term_id = wp_insert_term( $child_term, $taxonomy, array(
+                                    'parent' => $parent_term_id['term_id']
+                                ) );
+                            }
+        
+                            $object_terms[] = (int) $child_term_id['term_id'];
                         }
-    
-                        $object_terms[] = (int) $child_term_id['term_id'];
                     }
                 }
     
@@ -506,55 +484,6 @@
             }
     
         }
-
-        /**
-         * DEPRECATED in favor of meta-class
-         * Set object meta values 
-         *
-         * @param string $type
-         * @param array $data
-         * @return array meta values
-         */
-        // public function formatObjectMetaValues( string $type, array $data ) 
-        // {
-        //     // Set keys for meta values
-        //     $meta = array();
-
-        //     if( $type === 'wonen' ) 
-        //     {
-        //         $meta['realworks_id'] = $data['id'];
-        //         $meta['realworks_vestiging'] = $data['diversen']['diversen']['afdelingscode'];
-        //         $meta['financieel'] = $data['financieel']['overdracht'];
-        //         $meta['algemeen'] = $data['algemeen'];
-        //         $meta['buitenruimte'] = $data['detail']['buitenruimte'];
-        //         $meta['media_raw'] = $data['media'];
-        //         $meta['prijs'] = $this->formatPrice( $type, $data['financieel']['overdracht'] );
-        //     }
-
-        //     if( $type === 'business' )
-        //     {
-        //         $meta['realworks_id'] = $data['id'];
-        //         $meta['realworks_vestiging'] = $data['diversen']['diversen']['afdelingscode'];
-        //         $meta['financieel'] = $data['financieel']['overdracht'];
-        //         $meta['gebouwdetails'] = $data['gebouwdetails'];
-        //         $meta['media_raw'] = $data['media'];
-        //         $meta['prijs'] = $this->formatPrice( $type, $data['financieel']['overdracht']['koopEnOfHuur'] );
-        //     }
-
-        //     if( $type === 'nieuwbouw' ) 
-        //     {
-        //         $meta['realworks_id'] = $data['project']['id'];
-        //         $meta['realworks_vestiging'] = $data['project']['diversen']['diversen']['afdelingscode'];
-        //         $meta['algemeen'] = $data['project']['algemeen'];
-        //         $meta['diversen'] = $data['project']['diversen']['diversen'];
-        //         $meta['media_raw'] = $data['media'];
-        //         $meta['prijs'] = $this->formatPrice( $type, $data['project']['algemeen']['koopOfHuur'] );
-        //     }
-
-        //     return $meta;
-
-        // }
-
 
     } // End class
 

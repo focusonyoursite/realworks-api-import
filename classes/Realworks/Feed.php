@@ -218,16 +218,12 @@
                     'aantal' => '10'
                 );
 
-                // @JUSTIN TO DO: NEEDS IMPLEMENTATION
-                // When import type is latest, we also get other items
-                // if( $import_type === 'latest' ) 
-                // {
-                //     $query['status'] = array_merge($query['status'], array(
-                //         // 'GEVEILD',
-                //         // 'INGETROKKEN',
-                //         // 'GEANNULEERD'
-                //     ));
-                // }
+                // When import type is latest, we need to get all active 
+                // statusses (to remove unactive projects automatically)
+                if( $import_type === 'latest' ) 
+                {
+                    $query['actief'] = 'all';
+                }
             }
 
             // When import type is latest, include the latest update

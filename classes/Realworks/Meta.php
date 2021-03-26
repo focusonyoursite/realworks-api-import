@@ -14,6 +14,7 @@
         {
             // Details
             $defaults = array(
+                'prijs' => array(),
                 'overdracht' => array(
                     'aanvaarding' => null,
                     'datum_laatste_wijziging' => null,
@@ -70,8 +71,14 @@
             // Get default mapping
             $map = $this->mapping();
 
+            // Set vestiging ID
+            $map['vestiging'] = $data['diversen']['diversen']['bedrijfscode'];
+
             // Setup raw media
             $map['media_raw'] = $data['media'];
+
+            // Meta for: Prijs
+            $map['prijs'] = $this->formatPrice( 'wonen', $data['financieel']['overdracht'] );
 
             // Meta for: Overdracht
             $map['overdracht']['aanvaarding'] = $data['financieel']['overdracht']['aanvaarding'];
@@ -134,6 +141,12 @@
 
             // Get default mapping
             $map = $this->mapping();
+
+            // Set vestiging ID
+            $map['vestiging'] = $data['bedrijfscode'];
+
+            // Meta for: Prijs
+            $map['prijs'] = $this->formatPrice( 'business', $data['financieel']['overdracht']['koopEnOfHuur'] );
 
             // Setup raw media
             $map['media_raw'] = $data['media'];
@@ -262,7 +275,115 @@
          */
         public function formatNieuwbouwMeta( array $data )
         {
-            return array();
+            // Get default mapping
+            $map = array();
+
+            // Set vestiging ID
+            $map['vestiging'] = $data['project']['diversen']['diversen']['bedrijfscode'];
+
+            // Setup raw media
+            $map['media_raw'] = $data['media'];
+
+            // Meta for: Prijs
+            $map['prijs'] = $this->formatPrice( 'nieuwbouw', $data['project']['algemeen'] );
+
+            // Meta for: Algemeen
+            $map['algemeen']['oplevering'] = $data['project']['algemeen']['opleveringsdatum'];
+            $map['algemeen']['start_bouw'] = $data['project']['algemeen']['datumStartBouw'];
+            $map['algemeen']['start_verkoop'] = $data['project']['algemeen']['datumStartVerkoop'];
+            $map['algemeen']['inhoud_vanaf'] = $data['project']['algemeen']['inhoudVanaf'];
+            $map['algemeen']['inhoud_tot'] = $data['project']['algemeen']['inhoudTot'];
+            $map['algemeen']['woonoppervlakte_vanaf'] = $data['project']['algemeen']['woonoppervlakteVanaf'];
+            $map['algemeen']['woonoppervlakte_tot'] = $data['project']['algemeen']['woonoppervlakteTot'];
+            $map['algemeen']['website'] = $data['project']['algemeen']['website'];
+
+            // Meta for: Adres
+            $map['adres']['postcode'] = $data['project']['algemeen']['postcode'];
+            $map['adres']['plaats'] = $data['project']['algemeen']['plaats'];
+
+            // Meta for: bouwtypen
+            $map['bouwtypen'] = array();
+            if( !empty( $data['bouwtypen'] ) )
+            {
+                foreach( $data['bouwtypen'] as $bouwtype )
+                {
+                    $map['bouwtypen'][] = array(
+                        'title' => $bouwtype['algemeen']['omschrijving'],
+                        'objecttype' => $bouwtype['algemeen']['objecttype'],
+                        'koopprijs_vanaf' => $bouwtype['algemeen']['koopaanneemsomVanaf'],
+                        'huurprijs_vanaf' => $bouwtype['algemeen']['huurprijsVanaf'],
+                        'woonoppervlakte_vanaf' => $bouwtype['algemeen']['woonoppervlakteVanaf']
+                    );
+                }  
+            }
+
+            // Return metadata
+            return $map;
+        }
+
+        /**
+         * Format the price to standardized array
+         *
+         * @param string $type
+         * @param array $data
+         * @return array pricedata
+         */
+        public function formatPrice( string $type, array $data )
+        {
+            // Default price format
+            $price = array(
+                'huur' => array(
+                    'prijs' => 0,
+                    'voorvoegsel' => null,
+                    'conditie' => null,
+                    'prijstype' => false
+                ),
+                'koop' => array(
+                    'prijs' => 0,
+                    'voorvoegsel' => null,
+                    'conditie' => null
+                )
+            );
+
+            if( $type === 'wonen' || $type === 'business' ) 
+            {
+                if( $data['huurprijs'] != 0 )
+                {
+                    $price['huur']['prijs'] = $data['huurprijs'];
+                    $price['huur']['voorvoegsel'] = $data['huurprijsvoorvoegsel'];
+                    $price['huur']['conditie'] = $data['huurconditie'];
+                    $price['huur']['prijstype'] = $data['huurprijstype'];
+                    $price['huur']['specificaties'] = $data['huurspecificaties'];
+                }
+
+                if( $data['koopprijs'] != 0 ) 
+                {
+                    $price['koop']['prijs'] = $data['koopprijs'];
+                    $price['koop']['voorvoegsel'] = $data['koopprijsvoorvoegsel'];
+                    $price['koop']['conditie'] = $data['koopconditie'];
+                }
+            }
+
+            if( $type === 'nieuwbouw' )
+            {   
+                if( $data['huurprijsVanaf'] != 0 )
+                {
+                    $price['huur']['prijs_van'] = $data['huurprijsVanaf'];
+                    $price['huur']['prijs_tot'] = $data['huurprijsTot'];
+                    $price['huur']['voorvoegsel'] = 'VANAF';
+                    $price['huur']['conditie'] = '';
+                }
+
+                if( $data['koopaanneemsomVanaf'] != 0 )
+                {
+                    $price['koop']['prijs_van'] = $data['koopaanneemsomVanaf'];
+                    $price['koop']['prijs_tot'] = $data['koopaanneemsomTot'];
+                    $price['koop']['voorvoegsel'] = 'VANAF';
+                    $price['koop']['conditie'] = 'v.o.n.';
+                }
+            }
+
+            return $price;
         }
 
 

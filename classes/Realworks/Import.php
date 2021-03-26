@@ -67,6 +67,9 @@
 
             // Set notice for completing the import
             \WP_CLI::success('Import complete at: ' . date('d-m-Y H:i:s') );
+
+            // Finalize the import
+            $this->finalizeImport();
         }
 
 
@@ -153,7 +156,6 @@
             // Do the import
             if( !empty($data) ) 
             {
-                
                 // There are three arrays in the data variable, containing the three separate 
                 // object-types. The key is the feedname and the value is the data containing the 
                 // objects for importing. 
@@ -164,7 +166,6 @@
 
                     // Get total of posts
                     $total_posts = count($data);
-                    $total_count = 1;
 
                     // Add progress bar
                     $progress_bar = \WP_CLI\Utils\make_progress_bar( 'Progress Bar', $total_posts );
@@ -177,10 +178,6 @@
 
                         // Update progress bar
                         $progress_bar->tick();
-
-                        // $total_count++;
-                        // if( $total_count == 6 ) {break 2;}
-
                     }
 
                     // Finish progress bar
@@ -196,7 +193,7 @@
             $this->importMedia( $imported_posts );
 
             // Setup Facebook post
-            
+            // @JUSTIN TO DO: Send to facebook!
 
             // Add the latest import to options table
             add_option('realworks_latest_update', time());
@@ -376,15 +373,28 @@
             }
         }
 
+        /**
+         * Get all taxonomies of object type
+         *
+         * @return array $taxonomies
+         */
+        private function getTaxonomies()
+        {
+            $taxonomies = get_object_taxonomies('object');
+            return (array) $taxonomies;
+        }
 
-        
-        // private function finalize_import() {
-            
-        // 	// We always need to run these commands afterwards in one bulk action because we are disabling counting of terms etc in the "end_bulk_operation" method.
-    
-        // 	foreach( $this->get_taxonomies() as $taxonomy ) {
-        // 		\WP_CLI::runcommand( "term recount " . $taxonomy);
-        // 	}
-        // }
+        /**
+         * Finalize the import and recount the terms
+         *
+         * @return void
+         */
+        private function finalizeImport() {
+        	// We always need to run these commands afterwards in one bulk action because 
+            // we are disabling counting of terms etc in the "end_bulk_operation" method.
+        	foreach( $this->getTaxonomies() as $taxonomy ) {
+        		\WP_CLI::runcommand( "term recount " . $taxonomy);
+        	}
+        }
 
     }

@@ -69,6 +69,7 @@
             register_post_type( 'object', $args );
         }
 
+
         /**
          * Registration of all taxonomies
          *
@@ -84,7 +85,12 @@
                     'label' => __('Type', 'burovoordeboeg'),
                     'public' => false,
                     'publicly_queryable' => true,
-                    'show_ui' => true
+                    'show_ui' => true,
+                    'rewrite' => array(
+                        'slug' => 'aanbod-woningtype',
+                        'with_front' => true,
+                        'hierarchical' => true
+                    )
                 ),
 
                 // Koop of huur
@@ -102,7 +108,12 @@
                     'label' => __('Plaats', 'burovoordeboeg'),
                     'public' => false,
                     'publicly_queryable' => true,
-                    'show_ui' => true
+                    'show_ui' => true,
+                    'rewrite' => array(
+                        'slug' => 'aanbod-plaats',
+                        'with_front' => true,
+                        'hierarchical' => true
+                    )
                 ),
 
                 // Wonen, Business of Nieuwbouw
@@ -111,7 +122,12 @@
                     'label' => __('Soort', 'burovoordeboeg'),
                     'public' => false,
                     'publicly_queryable' => true,
-                    'show_ui' => true
+                    'show_ui' => true,
+                    'rewrite' => array(
+                        'slug' => 'aanbod-type',
+                        'with_front' => true,
+                        'hierarchical' => true
+                    )
                 ),
 
                 // Status van het object
