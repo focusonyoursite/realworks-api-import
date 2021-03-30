@@ -99,7 +99,8 @@
                     'label' => __('Koop of huur', 'burovoordeboeg'),
                     'public' => false,
                     'publicly_queryable' => true,
-                    'show_ui' => true
+                    'show_ui' => true,
+                    'show_admin_column' => true,
                 ),
 
                 // Plaats
@@ -113,7 +114,8 @@
                         'slug' => 'aanbod-plaats',
                         'with_front' => true,
                         'hierarchical' => true
-                    )
+                    ),
+                    'show_admin_column' => true,
                 ),
 
                 // Wonen, Business of Nieuwbouw
@@ -127,7 +129,8 @@
                         'slug' => 'aanbod-type',
                         'with_front' => true,
                         'hierarchical' => true
-                    )
+                    ),
+                    'show_admin_column' => true,
                 ),
 
                 // Status van het object
@@ -136,7 +139,8 @@
                     'label' => __('Status', 'burovoordeboeg'),
                     'public' => false,
                     'publicly_queryable' => true,
-                    'show_ui' => true
+                    'show_ui' => true,
+                    'show_admin_column' => true,
                 )
             );
 

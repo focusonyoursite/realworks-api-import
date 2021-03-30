@@ -22,7 +22,7 @@
         public function __construct()
         {
             $this->feed = new Feed();
-            $this->helpers = new ImportHelper();
+            $this->helpers = new Helpers();
             $this->media = new Media();
             $this->meta = new Meta();
             $this->settings = new Settings();

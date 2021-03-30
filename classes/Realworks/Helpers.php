@@ -3,7 +3,7 @@
     namespace BvdB\Realworks;
 
     
-    class ImportHelper
+    class Helpers
     {   
 
         /**
@@ -484,6 +484,7 @@
             }
     
         }
+        
 
     } // End class
 
