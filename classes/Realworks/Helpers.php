@@ -452,6 +452,8 @@
                         }
                     }
                 }
+
+                // @JUSTIN TO DO: object_type gaat niet goed
     
                 // Return the array
                 return $object_terms;

@@ -143,7 +143,7 @@
             $map = $this->mapping();
 
             // Set vestiging ID
-            $map['vestiging'] = $data['bedrijfscode'];
+            $map['vestiging'] = $data['bedrijfscode']; // < DEZE WERKT NIET
 
             // Meta for: Prijs
             $map['prijs'] = $this->formatPrice( 'business', $data['financieel']['overdracht']['koopEnOfHuur'] );
