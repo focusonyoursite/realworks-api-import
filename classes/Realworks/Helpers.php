@@ -306,7 +306,7 @@
                 if( $taxonomy === 'type' )
                 {
                     $term = array();
-                    $term['parent'] = $data['kenmerken']['hoofdfunctie'];
+                    $term[0]['parent'] = $data['kenmerken']['hoofdfunctie'];
                 }
                 
                 if( $taxonomy === 'plaats' )
@@ -419,41 +419,49 @@
             {
                 // Storage variable for terms to set
                 $object_terms = array();
-                
-                foreach( $value as $value_term )
+
+                // Loop terms only when array
+                if( is_array($value) ) 
                 {
-                    // Check if the parent term exists
-                    $parent_term_id = term_exists( $value_term['parent'], $taxonomy );
-        
-                    // If parent term does not exists, insert into taxonomy
-                    if( $parent_term_id === null )
+                    // Loop arrays
+                    foreach( $value as $term_key => $term )
                     {
-                        $parent_term_id = wp_insert_term( $value_term['parent'], $taxonomy );
-                    }
-                    // Add parent term to storage
-                    $object_terms[] = (int) $parent_term_id['term_id'];
-        
-                    // Now loop through any children. 
-                    if( !empty( $value_term['children'] ) )
-                    {
-                        foreach ( $value_term['children'] as &$child_term ) 
+                        // Check if the parent term exists
+                        $parent_term_id = term_exists( $term['parent'], $taxonomy );
+            
+                        // If parent term does not exists, insert into taxonomy
+                        if( $parent_term_id === null )
                         {
-                            $child_term_id = term_exists( $child_term, $taxonomy, $parent_term_id );
-        
-                            // If not exists, create the term and use ID to link to post. 
-                            if( $child_term_id === null )
+                            $parent_term_id = wp_insert_term( $valuterme['parent'], $taxonomy );
+                        }
+                        
+                        if( !is_a($parent_term_id, 'WP_ERROR') )
+                        {
+                            // Add parent term to storage
+                            $object_terms[] = $parent_term_id['term_id'];
+            
+                            // Now loop the children
+                            if( isset($term['children']) && !empty( $term['children'] ) && is_array($term['children']) )
                             {
-                                $child_term_id = wp_insert_term( $child_term, $taxonomy, array(
-                                    'parent' => $parent_term_id['term_id']
-                                ) );
+                                // Now loop through any children. 
+                                foreach ( $term['children'] as $child_term ) 
+                                {
+                                    $child_term_id = term_exists( $child_term, $taxonomy, $parent_term_id );
+                
+                                    // If not exists, create the term and use ID to link to post. 
+                                    if( $child_term_id === null )
+                                    {
+                                        $child_term_id = wp_insert_term( $child_term, $taxonomy, array(
+                                            'parent' => $parent_term_id['term_id']
+                                        ) );
+                                    }
+                
+                                    $object_terms[] = $child_term_id['term_id'];
+                                }
                             }
-        
-                            $object_terms[] = (int) $child_term_id['term_id'];
                         }
                     }
                 }
-
-                // @JUSTIN TO DO: object_type gaat niet goed
     
                 // Return the array
                 return $object_terms;
@@ -473,7 +481,7 @@
                         $term_id = wp_insert_term( $term, $taxonomy );
                     }
     
-                    $object_terms[] = (int) $term_id['term_id'];
+                    $object_terms[] = $term_id['term_id'];
                 }
     
                 return $object_terms;
