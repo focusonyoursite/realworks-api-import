@@ -236,12 +236,11 @@
             {   
                 foreach( $media_objects as $media_object )
                 {
-                    // TO DO: ACTIVEREN NADAT TESTS GESLAAGD ZIJN
-                    // $video_url = $this->vimeo->get_video_url( $post_id, $media_object );
-                    // if( !empty( $video_url ) ) 
-                    // {
-                    //     $imported_item[] = $video_url;
-                    // }
+                    $video_url = $this->vimeo->getVideoUrl( $post_id, $media_object );
+                    if( !empty( $video_url ) ) 
+                    {
+                        $imported_items[] = $video_url;
+                    }
                 }
             }
 

@@ -10,7 +10,16 @@
          */
         public function __construct()
         {
-            
+            add_action( 'init', array( $this, 'loadSettings' ) );
+        }
+
+        /**
+         * Load the settings page
+         *
+         * @return void
+         */
+        public function loadSettings() 
+        {
             /** 
              * Load settings page as ACF options page
              * @see: https://www.advancedcustomfields.com/resources/acf_add_options_page/
@@ -31,7 +40,6 @@
                 // Load the field group
                 $this->loadLocalFieldGroup();
             }
-
         }
 
         /**
@@ -59,28 +67,6 @@
             }
 
             return $api_keys;
-        }   
-        
-        /**
-         * Get all locations
-         *
-         * @param string $type
-         * @return array $locations
-         */
-        public function getLocations( string $type )
-        {
-            
-        }
-
-        /**
-         * Get location by ID
-         *
-         * @param string $id
-         * @return string location title
-         */
-        public function getLocationName( string $id )
-        {
-            
         }
 
         

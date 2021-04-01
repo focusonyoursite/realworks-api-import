@@ -29,7 +29,7 @@
          * @param array $media_object
          * @return void
          */
-        public function get_video_url ( int $post_id, array $media_object )
+        public function getVideoUrl ( int $post_id, array $media_object )
         {
             // URL to return
             $video_url = '';
@@ -44,13 +44,13 @@
 
                 if( $upload_result !== null ) 
                 {
-                    $this->put_in_folder( $upload_result );
-                    return $upload_result;
+                    $this->putInFolder( $upload_result );
+                    return $this->getVimeoId($upload_result);
                 }
 
             }
 
-            // Does exist, return video-uri
+            // Does exist, return video-id
             else 
             {
                 $video_url = $search_result;
@@ -85,7 +85,7 @@
                 {
                     if( $search_result['description'] === 'Media file: [' . $media_object['filename'] . ']' )
                     {
-                        return $search_result['uri'];
+                        return $this->getVimeoId($search_result['uri']);
                         break;
                     }
                 }
@@ -135,7 +135,7 @@
          * @param string $vimeo_uri
          * @return void
          */
-        private function put_in_folder ( string $vimeo_uri )
+        private function putInFolder ( string $vimeo_uri )
         {
             // Add to Kolpa vd Hoek folder in account
             $request = $this->vimeo->request(
@@ -145,6 +145,17 @@
             );
 
             return $request['body'];
+        }
+
+        /**
+         * Only return Vimeo ID for further processing
+         *
+         * @param string $uri
+         * @return string video ID
+         */
+        private function getVimeoId( string $uri )
+        {
+            return str_replace('/videos/', '', $uri);
         }
 
     }

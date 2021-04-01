@@ -101,6 +101,24 @@
         }
 
         /**
+         * Get the code of the establishment
+         *
+         * @param string $type
+         * @param array $data
+         * @return integer $id
+         */
+        function extractEstablishmentId( string $type, array $data )
+        {
+            if( $type === 'nieuwbouw' )
+            {
+                return $data['project']['diversen']['diversen']['afdelingscode'];
+            }
+            else {
+                return $data['diversen']['diversen']['afdelingscode'];
+            }
+        }
+
+        /**
          * Format the object title
          *
          * @param string $type

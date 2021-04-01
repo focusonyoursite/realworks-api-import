@@ -224,6 +224,7 @@
             // Check if there is a post with the same Realworks ID already in database
             $post_id = $this->helpers->findPostByReference( $type, $data );
             $realworks_id = $this->helpers->extractRealworksId( $type, $data );
+            $establishment_id = $this->helpers->extractEstablishmentId( $type, $data );
             
             \WP_CLI::line( (( $post_id != null ) ? 'Start update of object with Post_ID: ' . $post_id : 'Insert new object for Realworks ID ' . $realworks_id ) );
 
@@ -247,6 +248,7 @@
 
             // Add Realworks ID
             update_post_meta( $post_id, 'realworks_id', $realworks_id );
+            update_post_meta( $post_id, 'vestiging', $establishment_id );
             
             // Check if failed
             if( $post_id == null ) {
@@ -389,12 +391,16 @@
          *
          * @return void
          */
-        private function finalizeImport() {
+        private function finalizeImport() 
+        {
         	// We always need to run these commands afterwards in one bulk action because 
             // we are disabling counting of terms etc in the "end_bulk_operation" method.
         	foreach( $this->getTaxonomies() as $taxonomy ) {
         		\WP_CLI::runcommand( "term recount " . $taxonomy);
         	}
+
+            // Reindex Facets
+            \WP_CLI::runcommand( "facetwp index" );
         }
 
     }
