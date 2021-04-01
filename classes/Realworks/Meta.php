@@ -72,7 +72,7 @@
             $map = $this->mapping();
 
             // Set vestiging ID
-            $map['vestiging'] = $data['diversen']['diversen']['bedrijfscode'];
+            $map['vestiging'] = $data['diversen']['diversen']['afdelingscode'];
 
             // Setup raw media
             $map['media_raw'] = $data['media'];
@@ -143,7 +143,7 @@
             $map = $this->mapping();
 
             // Set vestiging ID
-            $map['vestiging'] = $data['bedrijfscode']; // < DEZE WERKT NIET
+            $map['vestiging'] = $data['diversen']['diversen']['afdelingscode'];
 
             // Meta for: Prijs
             $map['prijs'] = $this->formatPrice( 'business', $data['financieel']['overdracht']['koopEnOfHuur'] );
@@ -279,7 +279,7 @@
             $map = array();
 
             // Set vestiging ID
-            $map['vestiging'] = $data['project']['diversen']['diversen']['bedrijfscode'];
+            $map['vestiging'] = $data['project']['diversen']['diversen']['afdelingscode'];
 
             // Setup raw media
             $map['media_raw'] = $data['media'];
