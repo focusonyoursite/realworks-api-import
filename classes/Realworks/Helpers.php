@@ -432,19 +432,19 @@
                         // If parent term does not exists, insert into taxonomy
                         if( $parent_term_id === null )
                         {
-                            $parent_term_id = wp_insert_term( $valuterme['parent'], $taxonomy );
+                            $parent_term_id = wp_insert_term( $term['parent'], $taxonomy );
                         }
                         
                         if( !is_a($parent_term_id, 'WP_ERROR') )
                         {
                             // Add parent term to storage
-                            $object_terms[] = $parent_term_id['term_id'];
+                            $object_terms[] = (int) $parent_term_id['term_id'];
             
                             // Now loop the children
                             if( isset($term['children']) && !empty( $term['children'] ) && is_array($term['children']) )
                             {
                                 // Now loop through any children. 
-                                foreach ( $term['children'] as $child_term ) 
+                                foreach ( $term['children'] as $child_key => $child_term ) 
                                 {
                                     $child_term_id = term_exists( $child_term, $taxonomy, $parent_term_id );
                 
@@ -456,7 +456,7 @@
                                         ) );
                                     }
                 
-                                    $object_terms[] = $child_term_id['term_id'];
+                                    $object_terms[] = (int) $child_term_id['term_id'];
                                 }
                             }
                         }
@@ -464,33 +464,33 @@
                 }
     
                 // Return the array
-                return $object_terms;
+                return (array) $object_terms;
             }
     
             // Setup koophuur taxonomy
             elseif ( $taxonomy == 'object_koophuur' && !empty( $value )  )
             {
                 $object_terms = array();
-    
-                foreach( $value as &$term )
+
+                foreach( $value as $key => $term_name )
                 {
-                    $term_id = term_exists( $term, $taxonomy );
+                    $term_id = term_exists( $term_name, $taxonomy );
                     
                     if( $term_id === null )
                     {
-                        $term_id = wp_insert_term( $term, $taxonomy );
+                        $term_id = wp_insert_term( $term_name, $taxonomy );
                     }
     
-                    $object_terms[] = $term_id['term_id'];
+                    $object_terms[] = (int) $term_id['term_id'];
                 }
     
-                return $object_terms;
+                return (array) $object_terms;
             }
     
             // Not an array so return as is
             else 
             {
-                return $value;
+                return (array) $value;
             }
     
         }
