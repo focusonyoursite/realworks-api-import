@@ -17,6 +17,7 @@
         private $helpers;
         private $media;
         private $meta;
+        private $logs;
         private $settings;
 
         public function __construct()
@@ -30,6 +31,9 @@
             // Get latest update
             $this->import_type = 'latest';
             $this->latest_update = get_option('realworks_latest_update');
+
+            // Set logs location
+            $this->logs_dir = __DIR__ . '/../../logs/';
         }
 
         /**
@@ -63,10 +67,13 @@
             $this->getData();
 
             // Start list
-            $this->import( $this->data );
+            // $this->import( $this->data );
 
             // Set notice for completing the import
             \WP_CLI::success('Import complete at: ' . date('d-m-Y H:i:s') );
+
+            // Cleanup old logs
+            $this->cleanLogs();
 
             // Finalize the import
             $this->finalizeImport();
@@ -372,6 +379,44 @@
             else
             {
                 \WP_CLI::warning( 'No media to import' );
+            }
+        }
+
+        /**
+         * Remove old logs
+         *
+         * @return void
+         */
+        public function cleanLogs()
+        {
+            // Check if logs dir exists
+            if( file_exists( $this->logs_dir ) )
+            {
+                // Get the files
+                $loglist = array_diff( scandir( $this->logs_dir ), array( '..', '.' ) );
+
+                // Set max date
+                $max_datetime = date('Y-m-d H:i:s', strtotime('-7 days'));
+                
+                // Loop list when not empty
+                if( !empty($loglist) )
+                {
+                    foreach( $loglist as $log ) 
+                    {
+                        // Get datetime string from filename, output: Y-m-d H:i:s
+                        // Ex. 2021-04-21 14:15:00
+                        $datetime = str_replace('_', ' ', rtrim(ltrim($log, 'import-'), '.log'));
+
+                        if( strtotime($datetime) < strtotime($max_datetime) )
+                        {
+                            // Unlink
+                            unlink( $this->logs_dir . '/' . $log );
+                        }    
+                    }
+                }
+
+                // Removed logs before max date
+                \WP_CLI::line("Removing logs before $max_datetime");
             }
         }
 
