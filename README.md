@@ -27,7 +27,7 @@ wp bvdb-import start | tee logs/import-$(date '+%Y%m%dT%H:%M').log
 Om de database up to date te laten lopen met het aanbod in Realworks dient de volgende cronjob te worden ingesteld:
 
 ```bash
-*/15 * * * * /usr/local/bin/wp --path=/home/kolpahoek/domains/<<DOMEIN>>/public_html/wp/ bvdb-import start > logs/import-$(date '+%Y%m%dT%H:%M').log
+*/15 * * * * /home/<<USER>>/domains/<<DOMAIN>>/public_html/content/plugins/bvdb-realworks/cron.sh /home/<<USER>>/domains/<<DOMAIN>>/public_html/plugins/bvdb-realworks/ >/dev/null 2>&1
 ```
 
 ### Flags
