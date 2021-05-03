@@ -52,7 +52,7 @@
             }
             
             // Log import type
-            \WP_CLI::line('Import type: ' . $assoc_args['import-type'] );
+            \WP_CLI::line('Import type: ' . (( isset($assoc_args['import-type']) ) ? $assoc_args['import-type'] : 'Latest' ) );
 
             // Set the import type to make sure options are set
             if( !empty($this->latest_update) )
@@ -67,7 +67,7 @@
             $this->getData();
 
             // Start list
-            // $this->import( $this->data );
+            $this->import( $this->data );
 
             // Set notice for completing the import
             \WP_CLI::success('Import complete at: ' . date('d-m-Y H:i:s') );

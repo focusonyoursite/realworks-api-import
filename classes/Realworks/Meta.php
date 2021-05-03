@@ -77,6 +77,10 @@
             // Meta for: Prijs
             $map['prijs'] = $this->formatPrice( 'wonen', $data['financieel']['overdracht'] );
 
+            // Set fields for pricepoints for meta-filter
+            $map['prijs_koop'] = (float) $data['financieel']['overdracht']['koopprijs'];
+            $map['prijs_huur'] = (float) $data['financieel']['overdracht']['huurprijs'];
+
             // Meta for: Overdracht
             $map['overdracht']['aanvaarding'] = $data['financieel']['overdracht']['aanvaarding'];
             $map['overdracht']['datum_laatste_wijziging'] = $data['diversen']['diversen']['wijzigingsdatum'];
@@ -141,6 +145,10 @@
 
             // Meta for: Prijs
             $map['prijs'] = $this->formatPrice( 'business', $data['financieel']['overdracht']['koopEnOfHuur'] );
+
+            // Set fields for pricepoints for meta-filter
+            $map['prijs_koop'] = (float) $data['financieel']['overdracht']['koopprijs'];
+            $map['prijs_huur'] = (float) $data['financieel']['overdracht']['huurprijs'];
 
             // Setup raw media
             $map['media_raw'] = $data['media'];
@@ -277,6 +285,10 @@
 
             // Meta for: Prijs
             $map['prijs'] = $this->formatPrice( 'nieuwbouw', $data['project']['algemeen'] );
+
+            // Set fields for pricepoints for meta-filter
+            $map['prijs_huur'] = (float) $data['project']['algemeen']['huurprijsVanaf'];
+            $map['prijs_koop'] = (float) $data['project']['algemeen']['koopaanneemsomVanaf'];
 
             // Meta for: Algemeen
             $map['algemeen']['oplevering'] = $data['project']['algemeen']['opleveringsdatum'];
