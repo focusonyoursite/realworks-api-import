@@ -111,14 +111,14 @@
                     // When video is on Vimeo, post it
                     if( $video_url !== null )
                     {
-                        // $this->postVideo( get_the_id(), $video_url, $status );
+                        $this->postVideo( get_the_id(), $video_url, $status );
                     }
                 }
 
                 // If there is no video, then process as image
                 elseif( isset($media['images']) && !empty($media['images']) )
                 {
-                    // $this->postImage( get_the_id(), $media, $status );
+                    $this->postImage( get_the_id(), $media, $status );
                 }
 
             endwhile; endif;
