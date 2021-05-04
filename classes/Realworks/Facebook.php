@@ -14,6 +14,9 @@
         // Facebook access token by page_id
         private $publish_time = null; 
 
+        // Setup log location
+        private $logs_dir = null;
+
         /**
          * Class constructor
          */
@@ -49,6 +52,9 @@
 
             // Setup publish time for posts
             $this->publish_time = time() + ( 36 * 3600 );
+
+            // Set logs location
+            $this->logs_dir = __DIR__ . '/../../logs/';
 
         }
 
