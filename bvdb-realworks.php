@@ -26,6 +26,7 @@
         add_action( 'cli_init', function() {
 
             \WP_CLI::add_command( 'bvdb-import', '\BvdB\Realworks\Import' );
+            \WP_CLI::add_command( 'bvdb-facebook-update', '\BvdB\Realworks\Facebook' );
 
         } );
     }
