@@ -16,7 +16,7 @@
         /**
          * Constructor
          */
-        public function __construct()
+        public function __construct ()
         {
             $this->vimeo = new \Vimeo\Vimeo( static::$vimeo_client_id, static::$vimeo_client_secret );
             $this->vimeo->setToken( static::$vimeo_access_token );
@@ -66,7 +66,7 @@
          * @param array $media_object
          * @return array|null result of search
          */
-        private function search( array $media_object )
+        private function search ( array $media_object )
         {
             // Check if the video exists on Vimeo
             $request = $this->vimeo->request(
@@ -101,7 +101,7 @@
          * @param array $media_object
          * @return string video uri
          */
-        private function upload( int $post_id, array $media_object ) 
+        private function upload ( int $post_id, array $media_object ) 
         {
             $request = $this->vimeo->request(
                 '/me/videos', 
@@ -133,7 +133,7 @@
          * Put video in correct folder
          *
          * @param string $vimeo_uri
-         * @return void
+         * @return array $request
          */
         private function putInFolder ( string $vimeo_uri )
         {
@@ -156,6 +156,53 @@
         private function getVimeoId( string $uri )
         {
             return str_replace('/videos/', '', $uri);
+        }
+
+        /**
+         * Get the video url by post-id
+         *
+         * @param string $video_id
+         * @return string video-url
+         */
+        public function getVideoUrlById( string $video_id )
+        {
+            // Get the video by ID
+            $request = $this->vimeo->request(
+                '/videos/' . $video_id,
+                array(),
+                'GET'
+            );
+
+            // Check if status is 200 (OK)
+            if( $request['status'] == 200  )
+            {
+                if( 
+                    isset( $request['body']['status'] ) && 
+                    $request['body']['status'] === 'available' && 
+                    isset( $request['body']['files'] ) && 
+                    !empty( $request['body']['files'] ) )
+                {
+                    // Get files
+                    $files = $request['body']['files'];
+
+                    // Order array by 
+                    usort($files, function($a, $b) {
+                        return $a['width'] <=> $b['width'];
+                    });
+
+                    // Last item in array is largest file (hd mostly)
+                    $video_file = end($files);
+
+                    if( isset($video_file['link']) )
+                    {
+                        // Return the file link
+                        return $video_file['link'];
+                    }
+                }
+            }
+            
+            // Always return a string
+            return '';
         }
 
     }

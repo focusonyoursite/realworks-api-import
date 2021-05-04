@@ -22,7 +22,7 @@
             if( $type === 'wonen' || $type === 'business' )
             {
                 // Get current status
-                $current_status = wp_get_post_terms( $post_id, 'object_status' );
+                $current_status = get_post_meta( $post_id, 'latest_status', true );
                 $input_status = $this->formatTermData( $type, $data, 'status' );
 
                 // Check if post needs update
@@ -31,13 +31,13 @@
                     $input_status !== 'PROSPECT' &&
                     $input_status !== 'IN_AANMELDING' &&
                     $input_status !== 'VERKOCHT_BIJ_INSCHRIJVING' &&
-                    ( !isset($current_status[0]) || $current_status[0]->name !== $input_status ) )
+                    ( empty($current_status) || $current_status !== $input_status ) )
                 {
                     $update = true;
                 }
                 
                 $status_update = array(
-                    'old_status' => (( !isset( $current_status[0] ) ) ? null : $current_status[0]->name ),
+                    'old_status' => (( !empty($current_status) ) ? null : $current_status ),
                     'new_status' => $input_status
                 );
             }

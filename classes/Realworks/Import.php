@@ -199,9 +199,6 @@
             // Start Import of media
             $this->importMedia( $imported_posts );
 
-            // Setup Facebook post
-            // @JUSTIN TO DO: Send to facebook!
-
             // Add the latest import to options table
             add_option('realworks_latest_update', time());
             update_option('realworks_latest_update', time());
@@ -261,10 +258,14 @@
             if( $post_id == null ) {
                 \WP_CLI::warning( 'Failed importing object with ID ' . $realworks_id );
             } else {
-                // Output success message
-                $this->importTerms( $post_id, $type, $data );
-                $this->helpers->checkStatusUpdate( $post_id, $type, $data );
 
+                // Check if eligible for Facebook update
+                $this->helpers->checkStatusUpdate( $post_id, $type, $data );
+                
+                // Import the terms
+                $this->importTerms( $post_id, $type, $data );
+                
+                // Output success message
                 \WP_CLI::success( 'Succesfully imported object with ID ' . $realworks_id . ' and ' . $post_id );
             }
 
@@ -297,7 +298,14 @@
                 
                 if( !empty( $terms ) )
                 {
+                    // Set the object terms
                     wp_set_object_terms( $post_id, $terms, $taxonomy );
+
+                    if( $taxonomy == 'object_status' )
+                    {
+                        // Set latest status
+                        update_post_meta( $post_id, 'latest_status', $terms[0] );
+                    }
                 }
                 
             }
@@ -416,7 +424,7 @@
                 }
 
                 // Removed logs before max date
-                \WP_CLI::line("Removing logs before $max_datetime");
+                \WP_CLI::line("Removed logs before $max_datetime");
             }
         }
 
