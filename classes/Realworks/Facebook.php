@@ -134,7 +134,7 @@
                     // When video is on Vimeo, post it
                     if( $video_url !== null )
                     {
-                        // $this->postVideo( get_the_id(), $video_url, $status );
+                        $this->postVideo( get_the_id(), $video_url, $status );
                     }
 
                 }
@@ -143,7 +143,6 @@
                 elseif( isset($media['images']) && !empty($media['images']) )
                 {
                     $this->postImage( get_the_id(), $media, $status );
-                    break;
                 }
 
             endwhile; endif;
@@ -253,10 +252,10 @@
                 \WP_CLI::success('Successfully posted ' . $type . ' for ID: ' . $post_id);
 
                 // Add the post meta for this update
-                // add_post_meta( $post_id, 'facebook_update_id_' . time(), 'Succesfully published ' . $type );
+                add_post_meta( $post_id, 'facebook_update_id_' . time(), 'Succesfully published ' . $type );
 
                 // Update post meta to set the update status to false
-                // update_post_meta( $post_id, 'facebook_update_status', false );
+                update_post_meta( $post_id, 'facebook_update_status', false );
             }
 
             // When Graph returns an error
