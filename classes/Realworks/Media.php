@@ -7,17 +7,20 @@
     {   
 
         public $vimeo;
-        public static $realworks_dir = 'realworks';
 
         public $upload_path;
         public $upload_uri;
         public $upload_dir;
 
+        private $helpers = null;
+
         public function __construct()
         {
+            $this->helpers = Helpers::getInstance();
+
             $this->upload_path = wp_upload_dir()['basedir'] . '/';
-            $this->upload_uri = wp_upload_dir()['baseurl'] . '/' . static::$realworks_dir . '/';
-            $this->upload_dir = $this->createFolder( static::$realworks_dir , true );
+            $this->upload_uri = wp_upload_dir()['baseurl'] . '/realworks/';
+            $this->upload_dir = $this->createFolder( 'realworks' , true );
 
             $this->vimeo = new Vimeo();
         }
@@ -217,7 +220,7 @@
                     if( !$this->fileExists( $location, $media_object['filename'] ) )
                     {
                         // Setup URL to download
-                        $this->downloadFile( $media_object['url'], $location, $media_object['filename'] );
+                        $this->helpers->downloadFile( $media_object['url'], $location, $media_object['filename'] );
                     }
 
                     // Add to imported items
@@ -228,6 +231,10 @@
                     {
                         $featured_image = $this->parseFolderUrl( $location ) . $media_object['filename'];
                         update_post_meta( $post_id, 'featured_image_url', $featured_image );
+
+                        // Set featured image as OG and Twitter image-tags
+                        update_post_meta( $post_id, '_yoast_wpseo_opengraph-image', $featured_image );
+                        update_post_meta( $post_id, '_yoast_wpseo_twitter-image', $featured_image );
                     }
                 }
             }
@@ -245,44 +252,6 @@
             }
 
             return $imported_items;
-        }
-
-        /**
-         * Method for downloading the file over cURL to prevent timeout errors
-         *
-         * @param string $url
-         * @param string $location
-         * @param string $filename
-         * @return void
-         */
-        private function downloadFile( string $url, string $location, string $filename )
-        {
-            // unlimited max execution time
-            set_time_limit(0);
-
-            // Setup file handler (where the file ends up after download)
-            $file = fopen( $location . $filename , 'w');
-
-            // cURL
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url );
-
-            // set cURL options
-            curl_setopt($ch, CURLOPT_FAILONERROR, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-            // set file handler option
-            curl_setopt($ch, CURLOPT_FILE, $file);
-
-            // execute cURL
-            curl_exec($ch);
-
-            // close cURL
-            curl_close($ch);
-
-            // close file
-            fclose($file);
         }
 
 

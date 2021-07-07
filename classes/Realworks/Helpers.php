@@ -6,6 +6,8 @@
     class Helpers
     {   
 
+        private static $instance = null;
+
         /**
          * Check if the post needs a status update
          *
@@ -37,9 +39,10 @@
                 }
                 
                 $status_update = array(
-                    'old_status' => (( !empty($current_status) ) ? null : $current_status ),
+                    'old_status' => (( !empty($current_status) ) ? $current_status : null ),
                     'new_status' => $input_status
                 );
+
             }
 
             // Update the post meta
@@ -511,6 +514,57 @@
                 return (array) $value;
             }
     
+        }
+
+        /**
+         * Method for downloading the file over cURL to prevent timeout errors
+         *
+         * @param string $url
+         * @param string $location
+         * @param string $filename
+         * @return void
+         */
+        public function downloadFile( string $url, string $location, string $filename )
+        {
+            // unlimited max execution time
+            set_time_limit(0);
+
+            // Setup file handler (where the file ends up after download)
+            $file = fopen( $location . $filename , 'w');
+
+            // cURL
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url );
+
+            // set cURL options
+            curl_setopt($ch, CURLOPT_FAILONERROR, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            // set file handler option
+            curl_setopt($ch, CURLOPT_FILE, $file);
+
+            // execute cURL
+            curl_exec($ch);
+
+            // close cURL
+            curl_close($ch);
+
+            // close file
+            fclose($file);
+        }
+
+
+        /**
+         * Get Instance of the current class, of none exist, create the class
+         *
+         * @return object instance
+         */
+        public static function getInstance() {
+            if (self::$instance == null) {
+                self::$instance = new Helpers();
+            }
+            return self::$instance;
         }
         
 

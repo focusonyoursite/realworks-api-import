@@ -253,6 +253,12 @@
             // Add Realworks ID
             update_post_meta( $post_id, 'realworks_id', $realworks_id );
             update_post_meta( $post_id, 'vestiging', $establishment_id );
+
+            // Add OpenGraph data
+            update_post_meta( $post_id, '_yoast_wpseo_opengraph-title', $post['post_title'] );
+            update_post_meta( $post_id, '_yoast_wpseo_twitter-title', $post['post_title'] );
+            update_post_meta( $post_id, '_yoast_wpseo_opengraph-description', substr(strip_tags($post['post_content']), 0, 300) . '...' );
+            update_post_meta( $post_id, '_yoast_wpseo_twitter-description', substr(strip_tags($post['post_content']), 0, 300) . '...' );
             
             // Check if failed
             if( $post_id == null ) {
