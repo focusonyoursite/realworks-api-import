@@ -4,7 +4,7 @@
     Plugin Name: Realworks API Import
     Plugin URI: https://www.burovoordeboeg.nl
     Description: Importeer objecten vanuit Realworks met de Buro voor de Boeg Realworks import
-    Version: 0.0.1
+    Version: 0.0.2
     Author: Buro voor de Boeg
     Author URI: https://www.burovoordeboeg.nl
     License: none

@@ -84,13 +84,8 @@
                     'hierarchical' => true, 
                     'label' => __('Type', 'burovoordeboeg'),
                     'public' => false,
-                    'publicly_queryable' => true,
-                    'show_ui' => true,
-                    'rewrite' => array(
-                        'slug' => 'aanbod-woningtype',
-                        'with_front' => true,
-                        'hierarchical' => true
-                    )
+                    'rewrite' => false,
+                    'show_ui' => true
                 ),
 
                 // Koop of huur
@@ -98,9 +93,9 @@
                     'hierarchical' => true, 
                     'label' => __('Koop of huur', 'burovoordeboeg'),
                     'public' => false,
-                    'publicly_queryable' => true,
+                    'rewrite' => false,
                     'show_ui' => true,
-                    'show_admin_column' => true,
+                    'show_admin_column' => true
                 ),
 
                 // Plaats
@@ -108,13 +103,8 @@
                     'hierarchical' => true, 
                     'label' => __('Plaats', 'burovoordeboeg'),
                     'public' => false,
-                    'publicly_queryable' => true,
+                    'rewrite' => false,
                     'show_ui' => true,
-                    'rewrite' => array(
-                        'slug' => 'aanbod-plaats',
-                        'with_front' => true,
-                        'hierarchical' => true
-                    ),
                     'show_admin_column' => true,
                 ),
 
@@ -123,13 +113,8 @@
                     'hierarchical' => true, 
                     'label' => __('Soort', 'burovoordeboeg'),
                     'public' => false,
-                    'publicly_queryable' => true,
+                    'rewrite' => false,
                     'show_ui' => true,
-                    'rewrite' => array(
-                        'slug' => 'aanbod-type',
-                        'with_front' => true,
-                        'hierarchical' => true
-                    ),
                     'show_admin_column' => true,
                 ),
 
@@ -138,7 +123,7 @@
                     'hierarchical' => true, 
                     'label' => __('Status', 'burovoordeboeg'),
                     'public' => false,
-                    'publicly_queryable' => true,
+                    'rewrite' => false,
                     'show_ui' => true,
                     'show_admin_column' => true,
                 )
