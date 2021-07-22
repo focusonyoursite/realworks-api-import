@@ -452,6 +452,9 @@
          */
         private function finalizeImport() 
         {
+            // Remove all posts currently having status INGETROKKEN as these can't be available on the website
+            \WP_CLI::runcommand( "wp post list --post_type=object --object_status=INGETROKKEN --fields=ID  | xargs -n1 -I % wp post delete --force %" );
+
         	// We always need to run these commands afterwards in one bulk action because 
             // we are disabling counting of terms etc in the "end_bulk_operation" method.
         	foreach( $this->getTaxonomies() as $taxonomy ) {
