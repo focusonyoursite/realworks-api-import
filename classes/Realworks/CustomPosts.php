@@ -122,7 +122,7 @@
                 'object_status' => array(
                     'hierarchical' => true, 
                     'label' => __('Status', 'burovoordeboeg'),
-                    'public' => false,
+                    'public' => (( defined( 'WP_CLI' ) && WP_CLI ) ? true : false),
                     'rewrite' => false,
                     'show_ui' => true,
                     'show_admin_column' => true,
