@@ -355,8 +355,9 @@
                     $price['huur']['prijs'] = $data['huurprijs'];
                     $price['huur']['voorvoegsel'] = $data['huurprijsvoorvoegsel'];
                     $price['huur']['conditie'] = $data['huurconditie'];
-                    $price['huur']['prijstype'] = $data['huurprijstype'];
                     $price['huur']['specificaties'] = $data['huurspecificaties'];
+                    $price['huur']['prijstype'] = $data['huurprijstype'];
+                    $price['huur']['prijs_tot'] = $data['huurprijsTot'];
                 }
 
                 if( $data['koopprijs'] != 0 ) 

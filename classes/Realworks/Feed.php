@@ -195,7 +195,8 @@
                         'ONDER_OPTIE',
                         'VERKOCHT_ONDER_VOORBEHOUD',
                         'VERHUURD_ONDER_VOORBEHOUD',
-                        'VERHUURD'
+                        'VERHUURD',
+                        'VERKOCHT',
                     )
                 );
 
