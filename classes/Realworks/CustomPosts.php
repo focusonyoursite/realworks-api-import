@@ -112,8 +112,13 @@
                 'object_soort' => array(
                     'hierarchical' => true, 
                     'label' => __('Soort', 'burovoordeboeg'),
-                    'public' => false,
-                    'rewrite' => false,
+                    'public' => true,
+                    'rewrite' => array(
+                        'slug'         => _x( 'overzicht', 'URL slug', 'burovoordeboeg' ),
+                        'with_front'   => true,
+                        'pages'        => true,
+                        'feeds'        => true,
+                    ),
                     'show_ui' => true,
                     'show_admin_column' => true,
                 ),
