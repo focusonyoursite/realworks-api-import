@@ -301,11 +301,15 @@
             // Message store
             $message = '';
 
+            // Get buy or rent
+            $koophuur = wp_get_post_terms( $post_id, 'object_koophuur' );
+            $buyrent = $koophuur[0]->name;
+
             // Format message according to new status
             switch( $status['new_status'] )
             {
                 case 'BESCHIKBAAR':
-                    $message = 'Nieuw in verkoop';
+                    $message = 'Nieuw in ver' . (( strtolower($buyrent) == 'huur' ) ? 'huur' : 'koop');
                     break;
 
                 case 'ONDER_BOD':
