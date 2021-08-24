@@ -112,6 +112,17 @@
                         'key' => 'facebook_update_status',
                         'value' => true,
                     )
+                ),
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'object_soort',
+                        'terms' => array(
+                            'wonen', 
+                            'nieuwbouw'
+                        ),
+                        'field' => 'slug',
+                        'operator' => 'IN'
+                    )
                 )
             );
 
