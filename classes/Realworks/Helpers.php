@@ -197,7 +197,7 @@
                 switch ($return)
                 {
                     case 'insert':
-                        $value = $data['diversen']['diversen']['invoerdatum'];
+                        $value = (( isset($data['marketing']['publicatiedatum']) && !empty($data['marketing']['publicatiedatum']) ) ? $data['marketing']['publicatiedatum'] : $value = $data['diversen']['diversen']['invoerdatum'] );
                         break;
 
                     case 'modified':
