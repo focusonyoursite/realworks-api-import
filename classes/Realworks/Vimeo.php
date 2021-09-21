@@ -8,18 +8,25 @@
 
         // Setup class variables
         private $vimeo;
-        protected static $vimeo_client_id = '5c40d0996d502a323bc2f82a088c29e84bf1a079';
-        protected static $vimeo_client_secret = 'UeW0wKXclrhofmCIuRneOMgOXDvtpA9Q5by1S1U5N++DGC2HwER42YdAw4SY6R1HqKBue2TihUUVmyP7h0VNnWAWWimft1LZsnbeOAdW9z8z/NzVZf4dbXQsVv7voLev';
-        protected static $vimeo_access_token = '7df0dc5ecf39d61237a67bd155bfb3c0';
-        protected static $vimeo_folder_id = '3594618';
+        private $vimeo_client_id = '';
+        private $vimeo_client_secret = '';
+        private $vimeo_access_token = '';
+        private $vimeo_folder_id = '';
 
         /**
          * Constructor
          */
         public function __construct ()
         {
-            $this->vimeo = new \Vimeo\Vimeo( static::$vimeo_client_id, static::$vimeo_client_secret );
-            $this->vimeo->setToken( static::$vimeo_access_token );
+            // Gather Vimeo access data
+            $this->vimeo_client_id = get_field('vimeo_client_id', 'realworks');
+            $this->vimeo_client_secret = get_field('vimeo_client_secret', 'realworks');
+            $this->vimeo_access_token = get_field('vimeo_access_token', 'realworks');
+            $this->vimeo_folder_id = get_field('vimeo_folder_id', 'realworks');
+
+            // Create Vimeo Instance
+            $this->vimeo = new \Vimeo\Vimeo( $this->vimeo_client_id, $this->vimeo_client_secret );
+            $this->vimeo->setToken( $this->vimeo_access_token );
         }
 
         /**
@@ -139,7 +146,7 @@
         {
             // Add to Kolpa vd Hoek folder in account
             $request = $this->vimeo->request(
-                '/me/projects/' . static::$vimeo_folder_id . $vimeo_uri,
+                '/me/projects/' . $this->vimeo_folder_id . $vimeo_uri,
                 array(),
                 'PUT'
             );
