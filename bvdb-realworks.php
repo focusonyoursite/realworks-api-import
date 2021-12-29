@@ -27,6 +27,7 @@
 
             \WP_CLI::add_command( 'bvdb-import', '\BvdB\Realworks\Import' );
             \WP_CLI::add_command( 'bvdb-facebook-update', '\BvdB\Realworks\Facebook' );
+            \WP_CLI::add_command( 'bvdb-image-optimize', '\BvdB\Realworks\Shortpixel' );
 
         } );
     }
