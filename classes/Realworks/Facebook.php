@@ -17,11 +17,28 @@
         // Setup log location
         private $logs_dir = null;
 
+        // Set uploads URI
+        private $temp_storage_uri = null;
+        private $temp_storage_dir = null;
+
+        // Helpers class
+        private $helpers = null;
+
         /**
          * Class constructor
          */
         public function __construct()
         {
+            // Helpers class
+            $this->helpers = Helpers::getInstance();
+
+            // Set uploads dir
+            $this->temp_storage_uri = wp_upload_dir()['baseurl'] . '/realworks/tmp/';
+            $this->temp_storage_dir = wp_upload_dir()['basedir'] . '/realworks/tmp/';
+            
+            // When the storage dir does not exist, generate
+            $this->createTemporaryStorage( $this->temp_storage_dir );
+
             // This needs to be loaded through the settings page
             $facebook_app_id = get_field('facebook_app_id', 'realworks');
             $facebook_app_secret = get_field('facebook_app_secret', 'realworks');
@@ -51,7 +68,7 @@
             $this->facebook_access_tokens = $facebook_access_tokens;
 
             // Setup publish time for posts
-            $this->publish_time = time() + ( 36 * 3600 );
+            $this->publish_time = time() + ( 168 * 3600 );
 
             // Set logs location
             $this->logs_dir = __DIR__ . '/../../logs/';
@@ -95,6 +112,17 @@
                         'key' => 'facebook_update_status',
                         'value' => true,
                     )
+                ),
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'object_soort',
+                        'terms' => array(
+                            'wonen', 
+                            'nieuwbouw'
+                        ),
+                        'field' => 'slug',
+                        'operator' => 'IN'
+                    )
                 )
             );
 
@@ -119,6 +147,7 @@
                     {
                         $this->postVideo( get_the_id(), $video_url, $status );
                     }
+
                 }
 
                 // If there is no video, then process as image
@@ -133,22 +162,43 @@
 
         /**
          * Post Video to Facebook
+         * @see: https://developers.facebook.com/docs/graph-api/reference/page/videos#creating
          *
          * @param integer $post_id
          * @param array $status
          * @return int $facebook_id
          */
         private function postVideo( int $post_id, string $video_url, array $status )
-        {   
+        {    
+            $filename = $post_id . '.mp4';
+            $filepath = $this->temp_storage_dir . $filename;
+
+            // Download the video from Vimeo
+            if( !file_exists($filepath) )
+            {
+                // Download file
+                $this->helpers->downloadFile( $video_url, $this->temp_storage_dir, $filename );
+
+                // Check if it exists
+                if( file_exists($filepath) )
+                {
+                    $video = $this->temp_storage_uri . $filename;
+                }
+            }
+            // Already downloaded, so use direct list
+            else 
+            {
+                $video = $this->temp_storage_uri . $filename;
+            }
+
             // Get the formatted message
-            $message = $this->formatUpdateMessage($post_id, $status);
+            $message = $this->formatUpdateMessage($post_id, $status) . ', bekijk op onze website: ' . get_the_permalink($post_id);
             
             // Setup Data array
             $data = array(
                 'title' => get_the_title($post_id),
                 'description' => $message,
-                'link' => get_the_permalink($post_id),
-                'file_url' => $video_url,
+                'file_url' => $video,
                 'published' => false,
                 'scheduled_publish_time' => $this->publish_time
             );
@@ -159,6 +209,7 @@
 
         /**
          * Post image to Facebook
+         * @see: https://developers.facebook.com/docs/graph-api/reference/page/feed/#publish
          *
          * @param integer $post_id
          * @param array $status
@@ -168,26 +219,18 @@
         {
             // Get the formatted message
             $message = $this->formatUpdateMessage($post_id, $status);
-
-            // Get the image
-            $featured_image = get_post_meta( $post_id, 'featured_image_url', true );
-            if( empty($featured_image) )
-            {
-                $featured_image = $media['images'][0];
-            }
             
             // Setup Data array
             $data = array(
                 'title' => get_the_title($post_id),
                 'message' => $message,
                 'link' => get_the_permalink($post_id),
-                'url' => $featured_image,
                 'published' => false,
                 'scheduled_publish_time' => $this->publish_time
             );
 
             // Perform post action to videos endpoint
-            $this->post( $post_id, 'photos', $data, 'image' );
+            $this->post( $post_id, 'feed', $data, 'image' );
         }
 
         /**
@@ -227,14 +270,20 @@
             }
 
             // When Graph returns an error
-            catch(Facebook\Exceptions\FacebookResponseException $e) 
+            catch(\Facebook\Exceptions\FacebookAuthenticationException $e) 
             {
-                \WP_CLI::warning('Error posting ' . $type . ' for ID: ' . $post_id . ' - ' . $e->getMessage());
+                \WP_CLI::warning('Authentication Exception: Error posting ' . $type . ' for ID: ' . $post_id . ' - ' . $e->getMessage());
+            } 
+
+            // When Graph returns an error
+            catch(\Facebook\Exceptions\FacebookResponseException $e) 
+            {
+                \WP_CLI::warning('Response Exception: Error posting ' . $type . ' for ID: ' . $post_id . ' - ' . $e->getMessage());
             } 
 
             // When validation fails or other local issues
-            catch(Facebook\Exceptions\FacebookSDKException $e) {
-                \WP_CLI::warning('Error posting ' . $type . ' for ID: ' . $post_id . ' - ' . $e->getMessage());
+            catch(\Facebook\Exceptions\FacebookSDKException $e) {
+                \WP_CLI::warning('SDK Exception: Error posting ' . $type . ' for ID: ' . $post_id . ' - ' . $e->getMessage());
             }
 
             return null;
@@ -252,11 +301,15 @@
             // Message store
             $message = '';
 
+            // Get buy or rent
+            $koophuur = wp_get_post_terms( $post_id, 'object_koophuur' );
+            $buyrent = $koophuur[0]->name;
+
             // Format message according to new status
             switch( $status['new_status'] )
             {
                 case 'BESCHIKBAAR':
-                    $message = 'Nieuw in verkoop';
+                    $message = 'Nieuw in ver' . (( strtolower($buyrent) == 'huur' ) ? 'huur' : 'koop');
                     break;
 
                 case 'ONDER_BOD':
@@ -331,6 +384,20 @@
             }
         }
 
+        /**
+         * Create temp storage when it doesn't exist
+         *
+         * @param string $dir
+         * @return void
+         */
+        private function createTemporaryStorage( string $dir ) 
+        {
+            if( !file_exists($dir) )
+            {
+                \WP_CLI::line('Create tmp storage folder');
+                mkdir( $dir, 0755 );
+            }
+        }
 
 
 

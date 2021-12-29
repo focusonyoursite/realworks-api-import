@@ -253,6 +253,12 @@
             // Add Realworks ID
             update_post_meta( $post_id, 'realworks_id', $realworks_id );
             update_post_meta( $post_id, 'vestiging', $establishment_id );
+
+            // Add OpenGraph data
+            update_post_meta( $post_id, '_yoast_wpseo_opengraph-title', $post['post_title'] );
+            update_post_meta( $post_id, '_yoast_wpseo_twitter-title', $post['post_title'] );
+            update_post_meta( $post_id, '_yoast_wpseo_opengraph-description', substr(strip_tags($post['post_content']), 0, 300) . '...' );
+            update_post_meta( $post_id, '_yoast_wpseo_twitter-description', substr(strip_tags($post['post_content']), 0, 300) . '...' );
             
             // Check if failed
             if( $post_id == null ) {
@@ -446,6 +452,9 @@
          */
         private function finalizeImport() 
         {
+            // Remove all posts currently having status INGETROKKEN as these can't be available on the website
+            \WP_CLI::runcommand( "post list --post_type=object --object_status=\"INGETROKKEN\" --field=ID | xargs -n1 -I % wp post delete --force %" );
+
         	// We always need to run these commands afterwards in one bulk action because 
             // we are disabling counting of terms etc in the "end_bulk_operation" method.
         	foreach( $this->getTaxonomies() as $taxonomy ) {

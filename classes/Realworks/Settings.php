@@ -429,6 +429,107 @@
                     'active' => true,
                     'description' => '',
                 ));
+
+                // Vimeo settings
+                acf_add_local_field_group(array(
+                    'key' => 'group_6149b08d31715',
+                    'title' => 'Vimeo instellingen',
+                    'fields' => array(
+                        array(
+                            'key' => 'field_6149b09cea77e',
+                            'label' => 'Client ID',
+                            'name' => 'vimeo_client_id',
+                            'type' => 'text',
+                            'instructions' => '',
+                            'required' => 0,
+                            'conditional_logic' => 0,
+                            'wrapper' => array(
+                                'width' => '',
+                                'class' => '',
+                                'id' => '',
+                            ),
+                            'default_value' => '',
+                            'placeholder' => '',
+                            'prepend' => '',
+                            'append' => '',
+                            'maxlength' => '',
+                        ),
+                        array(
+                            'key' => 'field_6149b0bbea77f',
+                            'label' => 'Client Secret',
+                            'name' => 'vimeo_client_secret',
+                            'type' => 'text',
+                            'instructions' => '',
+                            'required' => 0,
+                            'conditional_logic' => 0,
+                            'wrapper' => array(
+                                'width' => '',
+                                'class' => '',
+                                'id' => '',
+                            ),
+                            'default_value' => '',
+                            'placeholder' => '',
+                            'prepend' => '',
+                            'append' => '',
+                            'maxlength' => '',
+                        ),
+                        array(
+                            'key' => 'field_6149b0c3ea780',
+                            'label' => 'Access Token',
+                            'name' => 'vimeo_access_token',
+                            'type' => 'text',
+                            'instructions' => '',
+                            'required' => 0,
+                            'conditional_logic' => 0,
+                            'wrapper' => array(
+                                'width' => '',
+                                'class' => '',
+                                'id' => '',
+                            ),
+                            'default_value' => '',
+                            'placeholder' => '',
+                            'prepend' => '',
+                            'append' => '',
+                            'maxlength' => '',
+                        ),
+                        array(
+                            'key' => 'field_6149b0d6ea781',
+                            'label' => 'Folder ID',
+                            'name' => 'vimeo_folder_id',
+                            'type' => 'text',
+                            'instructions' => '',
+                            'required' => 0,
+                            'conditional_logic' => 0,
+                            'wrapper' => array(
+                                'width' => '',
+                                'class' => '',
+                                'id' => '',
+                            ),
+                            'default_value' => '',
+                            'placeholder' => '',
+                            'prepend' => '',
+                            'append' => '',
+                            'maxlength' => '',
+                        ),
+                    ),
+                    'location' => array(
+                        array(
+                            array(
+                                'param' => 'options_page',
+                                'operator' => '==',
+                                'value' => 'acf-options-realworks',
+                            ),
+                        ),
+                    ),
+                    'menu_order' => 30,
+                    'position' => 'normal',
+                    'style' => 'default',
+                    'label_placement' => 'top',
+                    'instruction_placement' => 'label',
+                    'hide_on_screen' => '',
+                    'active' => true,
+                    'description' => '',
+                ));
                 
             }
         }
