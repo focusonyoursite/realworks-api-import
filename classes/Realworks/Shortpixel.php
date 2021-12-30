@@ -57,22 +57,42 @@
             {
                 foreach( $folders as $realworks_id => $files )
                 {
-                    // Process images
-                    // $result = \ShortPixel\fromFolder($folder)->wait(600)->toFiles($folder);
-                    $count = 0;
-                    if( !empty($files) )
+                    // Check if folder is already optimized
+                    $optimized = strpos($files[0], '.shortpixel');
+
+                    if( !empty($files) && $optimized !== false )
                     {
-                        // Loop all files in folder
-                        foreach( $files as $file )
-                        {
-                            // Optimize
-                            $result = \ShortPixel\fromFile($file)->toFiles( $this->upload_dir . 'realworks/images' );
-                            $count++;
-                        }
+                        \WP_CLI::line('Already optimized images in folder ' . $realworks_id );
                     }
-                    
-                    // Add optimization result as verbose output
-                    \WP_CLI::success('Optimized ' . $count . ' images for folder ' . $realworks_id );
+                    elseif( !empty($files) && $optimized === false )
+                    {
+                        // Process images
+                        $count = 0;
+                        if( !empty($files) )
+                        {
+                            // Loop all files in folder
+                            foreach( $files as $file )
+                            {
+                                // Optimize
+                                try{
+                                    $result = \ShortPixel\fromFile($file)->toFiles( $this->upload_dir . 'realworks/images' );
+                                    $count++;
+                                }
+                                catch(\Exception $e)
+                                {
+                                    \WP_CLI::error('Encountered error while processing images: ' . $e->getMessage() );
+                                }
+                            }
+                        }
+                        
+                        // Add optimization result as verbose output
+                        \WP_CLI::success('Optimized ' . $count . ' images for folder ' . $realworks_id );
+                    }
+                    else 
+                    {
+                        // Add optimization result as verbose output
+                        \WP_CLI::line('Nothing to optimize in folder ' . $realworks_id );
+                    }
                 }
 
             }
@@ -108,7 +128,7 @@
                         $image_folders[$subfolder] = array();
 
                         // Index all found files
-                        $files = array_diff(scandir( $subfolder_path . '/images/' ), array('..', '.', '.shortpixel'));
+                        $files = array_diff(scandir( $subfolder_path . '/images/' ), array('..', '.'));
 
                         // Add files to folder (index as realworks_id)
                         if( !empty($files) )
