@@ -122,7 +122,7 @@
                     'privacy' => array(
                         'download' => false,
                         'embed' => 'public',
-                        'view' => 'unlisted'
+                        'view' => 'disable'
                     )
                 ),
                 'POST'
