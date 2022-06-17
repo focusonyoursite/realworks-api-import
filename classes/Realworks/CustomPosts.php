@@ -5,10 +5,21 @@
     class CustomPosts
     {   
 
+        /**
+         * Registred locations
+         */
+        public $locations = array();
+
+        /**
+         * Class construct
+         */
         public function __construct()
         {
             add_action( 'init', array( $this, 'register_posttype' ) );
             add_action( 'init', array( $this, 'register_taxonomies' ) );
+			
+			add_action( 'manage_object_posts_columns', array( $this, 'add_meta_columns' ), 10, 1 );
+			add_action( 'manage_object_posts_custom_column', array( $this, 'location_post_meta' ), 10, 2 );
         }
 
         /**
@@ -139,6 +150,93 @@
                 register_taxonomy( $taxonomy, 'object', $args );
             }
         }
+
+        /**
+         * Add meta data columns in admin overview
+         *
+         * @return array
+         */
+        public function add_meta_columns( $columns )
+        {
+            // Add new column at the 
+            $insert_column = array('location' => 'Vestiging');
+            $columns = $this->insert_column_at_position( $columns, $insert_column, 3 );
+
+            return $columns;
+        }
+
+        /**
+         * Added location post meta
+         *
+         * @param string $column
+         * @param int $post_id
+         * @return string
+         */
+        public function location_post_meta( $column, $post_id )
+        {
+            if( $column === 'location' )
+            {
+                // Store locations when empty
+                if( empty($this->locations) )
+                {
+                    $this->locations = $this->get_locations();
+                }
+
+                // Set locations
+                $locations = $this->locations;
+
+                // Set the correct location value based on post meta
+                $location_id = get_post_meta( $post_id, 'vestiging', true );
+                
+                echo $locations[$location_id] ?: '-';
+            }
+        }
+
+        /**
+         * Get locations from realworks settigns
+         *
+         * @return array
+         */
+        private function get_locations():array
+        {
+            // Get locations
+            $locations = get_field('locations', 'realworks') ?: [];
+
+            if( !empty($locations) )
+            {
+                // Set location store
+                $location_list = array();
+
+                // Loop locations
+                foreach( $locations as $location )
+                {
+                    $location_list[$location['id']] = $location['title'];
+                }
+
+                // Return location list
+                return $location_list;
+            }
+
+            // Always return array
+            return array();
+        }
+
+        /**
+         * Insert a new column at specified position
+         *
+         * @param array $columns
+         * @param array $insert_column
+         * @param integer $position
+         * @return array
+         */
+        private function insert_column_at_position( array $columns, array $insert_column, int $position ):array 
+        {
+            $first_part = array_slice($columns, 0, $position, true);
+            $last_part = array_slice($columns, $position, count($first_part), true);
+            return array_merge( $first_part, $insert_column, $last_part );
+        }
+
+
 
     }
 
