@@ -48,7 +48,6 @@ references:
                   mv !(bvdb-realworks) bvdb-realworks
                   zip -r latest.zip ./bvdb-realworks/* -x *\.git\* *\.gitignore\* *\.circleci\* *\composer.json\* *\composer.lock\* *\update.json\* *\README.md\* *\logs\* *\json\*
                   mv bvdb-realworks/* .
-                  mv update.json bvdb-realworks/update.json
 
 commands:
   # rsync deploy
