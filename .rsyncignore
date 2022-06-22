@@ -1,3 +1,11 @@
-*
-!latest.zip
-!update.json
+.*
+*.js
+*.php
+*.sh
+classes
+json
+logs
+vendor
+composer.json
+composer.lock
+README.md
