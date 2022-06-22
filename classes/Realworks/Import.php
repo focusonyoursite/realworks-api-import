@@ -70,10 +70,10 @@
             \WP_CLI::line('Starting import at: ' . date('d-m-Y H:i:s') );
             
             // Make sure data is available
-            // $this->getData();
+            $this->getData();
 
             // Start list
-            // $this->import( $this->data );
+            $this->import( $this->data );
 
             // Set notice for completing the import
             \WP_CLI::success('Import complete at: ' . date('d-m-Y H:i:s') );
@@ -82,13 +82,13 @@
             $this->cleanInactiveObjects();
 
             // Cleanup old logs
-            // $this->cleanImportFiles( array_keys( $this->data ) );
+            $this->cleanImportFiles( array_keys( $this->data ) );
 
             // Cleanup old logs
-            // $this->helpers->cleanLogs( $this->logs_dir );
+            $this->helpers->cleanLogs( $this->logs_dir );
 
             // Finalize the import
-            // $this->finalizeImport();
+            $this->finalizeImport();
         }
 
 

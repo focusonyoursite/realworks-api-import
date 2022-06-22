@@ -2,6 +2,7 @@
 *.js
 *.php
 *.sh
+bvdb-realworks
 classes
 json
 logs
