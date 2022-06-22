@@ -9,4 +9,5 @@ then
 fi
 
 # BvdB import
-/usr/local/bin/wp bvdb-image-optimize start --allow-root
+# /usr/local/bin/wp bvdb-image-optimize start --allow-root
+echo "Feature is currently disabled";

@@ -1,10 +1,10 @@
 <?php 
 
     /*
-    Plugin Name: Realworks API Import
+    Plugin Name: Buro voor de Boeg - Realworks API Import
     Plugin URI: https://www.burovoordeboeg.nl
     Description: Importeer objecten vanuit Realworks met de Buro voor de Boeg Realworks import
-    Version: 0.0.3
+    Version: 1.0.0
     Author: Buro voor de Boeg
     Author URI: https://www.burovoordeboeg.nl
     License: none
@@ -13,6 +13,10 @@
     */
 
     include_once 'vendor/autoload.php';
+
+    // Get plug-in info
+    $plugin_data = get_plugin_data( __FILE__ );
+    $plugin_version = $plugin_data['Version'];
 
     // Register the custom post
     new \BvdB\Realworks\Activation();
@@ -27,8 +31,12 @@
 
             \WP_CLI::add_command( 'bvdb-import', '\BvdB\Realworks\Import' );
             \WP_CLI::add_command( 'bvdb-facebook-update', '\BvdB\Realworks\Facebook' );
-            \WP_CLI::add_command( 'bvdb-image-optimize', '\BvdB\Realworks\Shortpixel' );
 
         } );
     }
+
+    /**
+     * Setup updater class
+     */
+    new \BvdB\PluginUpdates( 'bvdb-realworks', $plugin_version );
     

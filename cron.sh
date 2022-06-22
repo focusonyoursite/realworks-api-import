@@ -9,4 +9,4 @@ then
 fi
 
 # BvdB import
-/usr/local/bin/wp bvdb-import start > logs/import-$(date '+%Y-%m-%d_%H:%M:00').log --allow-root
+/usr/local/bin/wp bvdb-import start > logs/import/$(date '+%Y-%m-%d_%H:%M:00').log --allow-root

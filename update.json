@@ -1,0 +1,17 @@
+{
+	"name" : "Buro voor de Boeg - Realworks API Import",
+	"plugin" : "bvdb-realworks/bvdb-realworks.php",
+	"slug" : "bvdb-realworks",
+	"package" : "https://plugins.burovoordeboeg.nl/bvdb-realworks/latest.zip",
+	"new_version" : "1.0.0", 
+	"requires" : "5.0.0",
+	"tested" : "6.0.0", 
+	"last_updated" : "2022-06-14 00:00:00",
+	"upgrade_notice" : "Plugin update is beschikbaar.",
+	"sections" : {
+		"description" : ""
+	},
+	"icons" : {
+		"svg" : "https://plugins.burovoordeboeg.nl/bvdb-realworks/assets/icon.svg"
+	}
+}

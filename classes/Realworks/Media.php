@@ -37,11 +37,9 @@
             $location = (( $root ) ? $this->upload_path : $this->upload_dir ) . $dirname . '/';
 
             // Create folder if not exists
-            if( !file_exists( $location ) )
-            {
-                mkdir( $location, 0755 );
-            }
+            $this->helpers->createDir($location);
 
+            // Return the location for further processing
             return $location;
         }
 

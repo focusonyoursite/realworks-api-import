@@ -70,8 +70,8 @@
             // Setup publish time for posts
             $this->publish_time = time() + ( 168 * 3600 );
 
-            // Set logs location
-            $this->logs_dir = __DIR__ . '/../../logs/';
+            // Create and set the log folder
+            $this->logs_dir = $this->helpers->createDir( __DIR__ . '/../../logs/facebook/' );
 
         }
 
@@ -92,7 +92,7 @@
             \WP_CLI::line('Done publishing updates to Facebook');
 
             // Cleanup old logs
-            $this->cleanLogs();
+            $this->helpers->cleanLogs( $this->logs_dir );
         }
 
         /**
@@ -343,45 +343,6 @@
             // Return the update message
             return $message . ': ' . $title;
 
-        }
-        
-
-        /**
-         * Remove old logs
-         *
-         * @return void
-         */
-        public function cleanLogs()
-        {
-            // Check if logs dir exists
-            if( file_exists( $this->logs_dir ) )
-            {
-                // Get the files
-                $loglist = array_diff( scandir( $this->logs_dir ), array( '..', '.' ) );
-
-                // Set max date
-                $max_datetime = date('Y-m-d H:i:s', strtotime('-7 days'));
-                
-                // Loop list when not empty
-                if( !empty($loglist) )
-                {
-                    foreach( $loglist as $log ) 
-                    {
-                        // Get datetime string from filename, output: Y-m-d H:i:s
-                        // Ex. 2021-04-21 14:15:00
-                        $datetime = str_replace('_', ' ', rtrim(ltrim($log, 'facebook-'), '.log'));
-
-                        if( strtotime($datetime) < strtotime($max_datetime) )
-                        {
-                            // Unlink
-                            unlink( $this->logs_dir . '/' . $log );
-                        }    
-                    }
-                }
-
-                // Removed logs before max date
-                \WP_CLI::line("Removed Facebook logs before $max_datetime");
-            }
         }
 
         /**

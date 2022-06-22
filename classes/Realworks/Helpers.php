@@ -554,6 +554,135 @@
             fclose($file);
         }
 
+        /**
+         * Create dir if it not exists
+         *
+         * @param string $dir
+         * @return string $directory location
+         */
+        public function createDir( $dir )
+        {
+            if( !file_exists($dir) )
+            {
+                mkdir( $dir, 0755 );
+            }
+
+            return $dir;
+        }
+        
+
+        /**
+         * Remove old logs
+         *
+         * @return void
+         */
+        public function cleanLogs( string $logs_dir = null )
+        {
+            // Check if logs dir exists
+            if( file_exists( $logs_dir ) )
+            {
+                // Get the files
+                $loglist = array_diff( scandir( $logs_dir ), array( '..', '.' ) );
+
+                // Set max date
+                $max_datetime = date('Y-m-d H:i:s', strtotime('-30 days'));
+                
+                // Loop list when not empty
+                if( !empty($loglist) )
+                {
+                    foreach( $loglist as $log ) 
+                    {
+                        // Get datetime string from filename, output: Y-m-d H:i:s
+                        // Ex. 2021-04-21 14:15:00
+                        $datetime = str_replace('_', ' ', rtrim($log, '.log'));
+
+                        if( strtotime($datetime) < strtotime($max_datetime) )
+                        {
+                            // Unlink
+                            unlink( $logs_dir . '/' . $log );
+                        }    
+                    }
+                }
+
+                // Removed logs before max date
+                \WP_CLI::line("Removed logs before $max_datetime");
+            }
+        }
+
+        /**
+         * Clean files in specified dir based on date
+         *
+         * @param string $file_dir
+         * @return string $max_datetime
+         */
+        public function cleanFiles( string $file_dir = null )
+        {
+            if( file_exists($file_dir) )
+            {
+                // Get the files
+                $file_list = array_diff( scandir( $file_dir ), array( '..', '.' ) );
+
+                // Set max date
+                $max_datetime = date('Y-m-d H:i:s', strtotime('-30 days'));
+
+                // Loop list when not empty
+                if( !empty($file_list) )
+                {
+                    foreach( $file_list as $file ) 
+                    {
+                        // Get datetime string from filename, output: Ymd
+                        // Ex. 20210421
+                        $date_part = explode('_', $file);
+                        
+                        // When date part is malformed, continue to next
+                        if( !isset($date_part[0]) )
+                        {
+                            continue;
+                        }
+
+                        // Set correct datetime to compare with
+                        $datetime = date( 'd-m-Y', strtotime($date_part[0]) ) . ' 00:00:00';
+
+                        // File location
+                        $file_location = $file_dir . '/' . $file;
+
+                        if( strtotime($datetime) < strtotime($max_datetime) && file_exists( $file_location ) )
+                        {
+                            // Unlink
+                            unlink( $file_dir . $file );
+                        }    
+                    }
+                }
+
+                // Return the time from which was deleted
+                return $max_datetime;
+            }
+        }
+
+        /**
+         * Delete the directory and contents
+         *
+         * @param string $dir
+         * @return void
+         */
+        public function deleteFolderAndContents( string $dir = null )
+        {
+            if( $dir === null )
+            {
+                return;
+            }
+
+            $iterator = new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach($files as $file) {
+                if ($file->isDir()){
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
+            }
+            rmdir($dir);
+        }
 
         /**
          * Get Instance of the current class, of none exist, create the class

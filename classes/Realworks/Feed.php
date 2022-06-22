@@ -7,13 +7,14 @@
     {   
 
         // Setup the general save locaion
-        public $import_save_location = __DIR__ . '/../../json/';
+        public $import_save_location;
         public $import_filename;
         public $settings;
 
-        public function __construct() {
+        public function __construct( $import_save_location ) {
             $this->import_filename = date( 'Ymd_Hi', time() ) . '.json';
             $this->settings = new Settings();
+            $this->import_save_location = $import_save_location;
         }
 
         /**

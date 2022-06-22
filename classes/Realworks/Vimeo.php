@@ -212,6 +212,25 @@
             return '';
         }
 
+        /**
+         * Delete video on Vimeo
+         *
+         * @param string $video_id
+         * @return bool on successful deletion
+         */
+        public function deleteVideoById( string $video_id )
+        {
+            // Delete the video by ID
+            $request = $this->vimeo->request(
+                '/videos/' . $video_id,
+                array(),
+                'DELETE'
+            );
+
+            // Return true if succesfull deleted video
+            return ( $request['status'] == 204 || $request['status'] == 200 );
+        }
+
     }
 
 ?>

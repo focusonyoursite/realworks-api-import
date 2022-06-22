@@ -9,6 +9,12 @@
     "require": {
         "vimeo/vimeo-api": "^3.0",
         "facebook/graph-sdk": "^5.7",
-        "shortpixel/shortpixel-php": "*"
-    }
+        "burovoordeboeg/plugin-updates": "1.0.0"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://repo.packagist.com/burovoordeboeg/"
+        }
+    ]
 }

@@ -1,0 +1,106 @@
+version: 2.1
+
+references:
+  default: &default
+    circleci_ip_ranges: true
+    working_directory: ~/theme
+    docker:
+      - image: cimg/php:7.3-node
+
+  # Rsync install
+  rsync_install: &rsync_install
+    run:
+      name: Install rsync
+      command: |
+        sudo apt-get update -y
+        sudo apt-get -y install rsync
+  
+  # Composer
+  composer_restore_cache: &composer_restore_cache
+    restore_cache:
+      keys:
+        - v1-dependencies-{{ checksum "composer.lock" }}
+        - v1-dependencies-
+
+  composer_save_cache: &composer_save_cache
+    save_cache:
+      key: composer-v1-{{ checksum "composer.lock" }}
+      paths:
+        - vendor
+  
+  composer_packagist: &composer_packagist
+    run:
+      name: Setup packagist authentication
+      command: composer config --global --auth http-basic.repo.packagist.com jstreuper $PACKAGIST_TOKEN
+
+  composer_install: &composer_install
+    run:
+      name: Compile vendors from composer packages
+      command: composer install -n --ignore-platform-reqs --optimize-autoloader --no-dev
+
+  # ZIP Files
+  zip_plugin: &zip_plugin
+    run:
+      name: 'Zip plugin files'
+      command: |
+                  mkdir bvdb-realworks
+                  shopt -s extglob dotglob
+                  mv !(bvdb-realworks) bvdb-realworks
+                  zip -r latest.zip ./bvdb-realworks/* -x *\.git\* *\.gitignore\* *\.circleci\* *\composer.json\* *\composer.lock\* *\update.json\* *\README.md\* *\logs\* *\json\*
+                  mv bvdb-realworks/* .
+                  mv update.json bvdb-realworks/update.json
+
+commands:
+  # rsync deploy
+  rsync_deploy:
+    description: Rsync deploy to input path
+    parameters:
+      jobname:
+        type: string
+        default: "production"
+      path: 
+        type: string
+        default: ""
+      server_ip: 
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: Rsync deploy to <<parameters.jobname>>
+          command: |
+            if [ -z <<parameters.path>> ]
+            then
+                echo "No path specified to deploy to"
+                exit 1
+            fi
+            rsync -avz -e "ssh -p $SERVER_PORT -o StrictHostKeyChecking=no" --chown=$USER:$USER --exclude-from '.rsyncignore' . $USER@<<parameters.server_ip>>:/home/$USER/domains/<<parameters.path>>
+
+jobs:
+  production:
+    <<: *default
+    steps:
+      - checkout
+      - <<: *rsync_install
+      - <<: *composer_restore_cache
+      - <<: *composer_packagist
+      - <<: *composer_install
+      - <<: *composer_save_cache
+      - <<: *zip_plugin 
+      - rsync_deploy:
+          jobname: "production"
+          path: $PRODUCTION_PATH
+          server_ip: $SERVER_IP
+      
+workflows:
+  deploy:
+    jobs:
+      - production:
+          context:
+            - buro-voor-de-boeg
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only:
+                # v1.0.0
+                - /^v\d+\.\d+\.\d+$/

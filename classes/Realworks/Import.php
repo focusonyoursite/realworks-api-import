@@ -11,6 +11,7 @@
         // Import type
         private $import_type = null;
         private $latest_update = null;
+        private $import_save_location = null;
 
         // Class wrappers
         private $feed;
@@ -19,21 +20,26 @@
         private $meta;
         private $logs;
         private $settings;
+        private $vimeo;
 
         public function __construct()
         {
-            $this->feed = new Feed();
+            // Get latest update
+            $this->import_type = 'latest';
+            $this->import_save_location =  __DIR__ . '/../../json/';
+            $this->latest_update = get_option('realworks_latest_update');
+
+            // Initialize subclasses
+            $this->feed = new Feed( $this->import_save_location );
             $this->helpers = new Helpers();
             $this->media = new Media();
             $this->meta = new Meta();
             $this->settings = new Settings();
+            $this->vimeo = new Vimeo();
 
-            // Get latest update
-            $this->import_type = 'latest';
-            $this->latest_update = get_option('realworks_latest_update');
+            // Create and set the log folder
+            $this->logs_dir = $this->helpers->createDir( __DIR__ . '/../../logs/import/' );
 
-            // Set logs location
-            $this->logs_dir = __DIR__ . '/../../logs/';
         }
 
         /**
@@ -64,19 +70,25 @@
             \WP_CLI::line('Starting import at: ' . date('d-m-Y H:i:s') );
             
             // Make sure data is available
-            $this->getData();
+            // $this->getData();
 
             // Start list
-            $this->import( $this->data );
+            // $this->import( $this->data );
 
             // Set notice for completing the import
             \WP_CLI::success('Import complete at: ' . date('d-m-Y H:i:s') );
 
+            // Clean inactive posts
+            $this->cleanInactiveObjects();
+
             // Cleanup old logs
-            $this->cleanLogs();
+            // $this->cleanImportFiles( array_keys( $this->data ) );
+
+            // Cleanup old logs
+            // $this->helpers->cleanLogs( $this->logs_dir );
 
             // Finalize the import
-            $this->finalizeImport();
+            // $this->finalizeImport();
         }
 
 
@@ -397,40 +409,144 @@
         }
 
         /**
-         * Remove old logs
+         * Clean inactive objects which no longer need to be on the website
          *
          * @return void
          */
-        public function cleanLogs()
+        private function cleanInactiveObjects()
         {
-            // Check if logs dir exists
-            if( file_exists( $this->logs_dir ) )
+            // Set date to delete from
+            $delete_from_date = strtotime('-8 months');
+
+            // Inactive objects in daterange
+            $inactive_objects = new \WP_Query(array(
+                'post_type' => 'object',
+                'showposts' => -1,
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'object_status',
+                        'field' => 'slug',
+                        'terms' => array(
+                            'verkocht',
+                            'verhuurd',
+                        )
+                    )
+                ),
+                'date_query' => array(
+                    array(
+                        'column' => 'post_modified',
+                        'before' => array(
+                            array(
+                                'year'  => date('Y', $delete_from_date),
+                                'month' => date('m', $delete_from_date),
+                                'day'   => date('d', $delete_from_date),
+                            ),
+                        )
+                    )
+                )
+            ));
+
+            // Pulled back objects
+            $pulled_objects = new \WP_Query(array(
+                'post_type' => 'object',
+                'showposts' => -1,
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'object_status',
+                        'field' => 'slug',
+                        'terms' => 'ingetrokken',
+                    )
+                )
+            ));
+
+            // Get all Post ID's and realworks ID's
+            $posts = array_merge(
+                wp_list_pluck($inactive_objects->posts, 'ID'),
+                wp_list_pluck($pulled_objects->posts, 'ID'),
+            );
+
+            // Storage for deleted_posts
+            $deleted_posts = array();
+
+            // WP CLI function
+            $this->startBulkOperation();
+
+            // Loop array and delete the post itself and attached media
+            foreach( $posts as $post_id )
             {
-                // Get the files
-                $loglist = array_diff( scandir( $this->logs_dir ), array( '..', '.' ) );
+                // Get post title
+                $post_title = get_the_title( $post_id );
 
-                // Set max date
-                $max_datetime = date('Y-m-d H:i:s', strtotime('-7 days'));
-                
-                // Loop list when not empty
-                if( !empty($loglist) )
+                // Get Realworks ID
+                $realworks_id = get_post_meta($post_id, 'realworks_id', true);
+
+                // Delete linked video
+                $media = get_post_meta($post_id, 'media', true);
+                $vimeo_id = $media['videos'][0] ?: null;
+
+                // Find uploads folder
+                $upload_dir = $this->media->getUploadsFolder() . $realworks_id . '/';
+
+                // Delete post
+                $delete_post = wp_delete_post( $post_id, true );
+
+                // Delete all files
+                if( !empty($realworks_id) && file_exists( $upload_dir ) )
                 {
-                    foreach( $loglist as $log ) 
-                    {
-                        // Get datetime string from filename, output: Y-m-d H:i:s
-                        // Ex. 2021-04-21 14:15:00
-                        $datetime = str_replace('_', ' ', rtrim(ltrim($log, 'import-'), '.log'));
-
-                        if( strtotime($datetime) < strtotime($max_datetime) )
-                        {
-                            // Unlink
-                            unlink( $this->logs_dir . '/' . $log );
-                        }    
-                    }
+                    $delete_files = $this->helpers->deleteFolderAndContents( $upload_dir );
                 }
 
-                // Removed logs before max date
-                \WP_CLI::line("Removed logs before $max_datetime");
+                // Delete video from Vimeo
+                if( $vimeo_id !== null )
+                {
+                    $delete_video = $this->vimeo->deleteVideoById($vimeo_id);
+                }
+
+                // Log all deletions
+                if( $delete_post )
+                {
+                    \WP_CLI::line("Cleaned post: $post_id with title $post_title");
+                }
+                if( $delete_files )
+                {
+                    \WP_CLI::line("Cleaned files attached to: $post_id in folder $realworks_id");
+                }
+                if( $delete_video )
+                {
+                    \WP_CLI::line("Cleaned video attached to: $post_id with reference $vimeo_id");
+                }
+
+                // Add to deleted posts array
+                $deleted_posts[] = $post_id;
+            }
+            
+            // End import operation and reset all the hooks etc
+            $this->endBulkOperation();
+
+            \WP_CLI::line("Deleted " . count($deleted_posts) . " inactive objects.");
+
+        }
+
+        /**
+         * Clean the import files when done importing
+         * 
+         * @param array $data
+         * @return void
+         */
+        private function cleanImportFiles( $feeds = null )
+        {
+            // Check if feeds are set
+            if( $feeds !== null ) 
+            {
+                // Loop feeds and clean the files in the directories
+                foreach( $feeds as $feed )
+                {
+                    // Clean the files
+                    $max_datetime = $this->helpers->cleanFiles( $this->import_save_location . '/' . $feed . '/' );
+
+                    // Removed logs before max date
+                    \WP_CLI::line("Removed files for $feed before $max_datetime");
+                }
             }
         }
 
@@ -452,9 +568,6 @@
          */
         private function finalizeImport() 
         {
-            // Remove all posts currently having status INGETROKKEN as these can't be available on the website
-            \WP_CLI::runcommand( "post list --post_type=object --object_status=\"INGETROKKEN\" --field=ID | xargs -n1 -I % wp post delete --force %" );
-
         	// We always need to run these commands afterwards in one bulk action because 
             // we are disabling counting of terms etc in the "end_bulk_operation" method.
         	foreach( $this->getTaxonomies() as $taxonomy ) {
